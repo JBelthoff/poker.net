@@ -28,3 +28,14 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "poker.net.dll"]
+
+
+#Example Development!
+# docker build --no-cache -t jbelthoff/poker.calc:razor-dev-latest .
+# docker scan jbelthoff/poker.calc:razor-dev-latest
+# docker push jbelthoff/poker.calc:razor-dev-latest
+
+#Example Production!
+# docker build --no-cache --no-cache -t jbelthoff/poker.calc:razor-prod-latest .
+# docker scan jbelthoff/poker.calc:razor-prod-latest
+# docker push jbelthoff/poker.calc:razor-prod-latest
