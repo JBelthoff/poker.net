@@ -1,0 +1,259 @@
+﻿@page
+@model poker.net.Pages.cactus_kevModel
+@{
+}
+<div class="container p-5">
+    <h1 class="display-4 text-center mb-5">Cactus Kev's Poker Hand Evaluator</h1>
+    <p><span class="text-danger"><strong>PLEASE TAKE NOTICE</strong> This article is recreated from the original which was located here: <a href="http://www.suffecool.net/poker/evaluator.html" target="_blank">Cactus Kev's Poker Hand Evaluator</a>. Cactus Kev is obviously a Master while I am merely a budding student. I've included it here for convinience only.</span></p>
+    <p><a href="/about">Back to About</a></p>
+    <p>A while ago, I decided to take a shot at writing a poker hand evaluator in the programming language "C". There are already numerous evaluators out there, but I had an idea for an algorithm that might be faster than anything already out there. The basic concept is to write a routine that would take a five card poker hand and return its overall "value". This is extremely valuable in any poker-related software, since the code will constantly be comparing various players' hands with each other to determine the "winner". Here is my concept on how I thought I could write a fast evaluator.</p>
+    <hr class="w-75 mx-auto my-4">
+    <div class="bg-light text-dark p-3">
+    <p class="fst-italic">Okay, before we start digging into my algorithm, please read this first. I usually get one or two emails every month from somebody interested in my algorithm or poker code, and they typically ask me if I happen to have a seven-card poker evaluator. The answer is yes — I did indeed write a seven-card hand evaluator a few years after writing the five-card one. It used a completely new algorithm, completely unrelated to my five-card version. I just never posted it on my website because (a) it was pretty lengthy, and (b) I was too lazy to write up all that HTML.</p>
+    <p class="fst-italic">However, one day I got an email from an actual poker software company from Canada called <a href="http://www.poker-academy.com/"><b>Poker Academy</b></a>. They also wanted to know if I had written a seven-card evaluator, and if so, could they test it to see if it was faster than their current code? We converted my code from 'C' to Java, and they gave it a whirl. Turns out it was about three times faster than what they were currently using, so they asked if I'd be willing to sell/license it to their company for use in the next version of their software. We worked out a contract and the deal was inked. If you visit their site, download version 2.5, and select Version History, you can see my name in the notes for the February 15, 2006 2.5.0 Release (b164). The downside of all this is that I cannot pass on my seven-card evaluator algorithm to any curious poker math geeks who stumble upon my site. So don't email me asking for the code or algorithm, because I can't give it to you. Sorry, mate.</p>
+    </div>
+    <hr class="w-75 mx-auto my-4">
+    <p>First off, any person who has studied combinatorics will know that there are <code>C(52,5)</code>, or 2,598,960 possible unique poker hands. I realized that even though there are nearly 2.6 million unique hands, many of those hands actually have the <em>same</em> poker hand value. In other words, somebody holding an AJ942 flush in spades has the exact same value hand as somebody with an AJ942 flush in clubs. Even though both hands are unique, they still hold the identical value, and would therefore "tie" in poker games.</p>
+    <p>Here's another way to look at it. Suppose you were able to round up 2,598,960 of your friends on a football field, and you gave each of them one of the unique 2,598,960 poker hands to hold. You then yell in a loud voice, asking everyone to compare their hand with everybody else's hand. (This will take some time, of course :) Anyway, once they are done, you ask the person holding the best hand to step forward. Of course, four people will step forward, each holding a Royal Flush in each of the four suits. They all "tied" for having the best hand. You group those people together, tie a rope around them, label them with the number "1", and ask them to leave the field. Now, you ask your friends to compare hands again and figure out who has the best hand now. This time, four more people come forward, each holding a King-High Straight Flush. You group them together, label them with a "2", and escort them off the field. You keep repeating this process of finding out who has the highest hand and marking them with the next number. The next eight queries should yield:</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>3: four people holding Queen-High Straight Flushes</li>
+            <li>4: four people holding Jack-High Straight Flushes</li>
+            <li>5: four people holding Ten-High Straight Flushes</li>
+            <li>6: four people holding Nine-High Straight Flushes</li>
+            <li>7: four people holding Eight-High Straight Flushes</li>
+            <li>8: four people holding Seven-High Straight Flushes</li>
+            <li>9: four people holding Six-High Straight Flushes</li>
+            <li>10: four people holding Five-High Straight Flushes</li>
+        </ul>
+    </div>
+    <p>Now, when you query for the eleventh time, four people should step forward, each holding Four Aces with a King kicker. Then, Four Aces with a Queen kicker. Then, Four Aces with a Jack kicker. And so on, until we have Four Aces with a Deuce kicker. Next comes Four Kings with an Ace kicker. This continues until we finally get down to Four Deuces with a Trey kicker.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>11: four people holding Four Aces with a King kicker
+            <li>12: four people holding Four Aces with a Queen kicker
+            <li>...
+            <li>165: four people holding Four Deuces with a Four kicker
+            <li>166: four people holding Four Deuces with a Trey kicker
+        </ul>
+    </div>
+    <p>Next, for the 167<sup>th</sup> query, we find twenty-four people coming forward, each holding a Full House of Aces over Kings. Then 24 people with Aces over Queens. And so on, for the remaining Full House hands.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>167: twenty-four people holding Full Houses of Aces over Kings
+            <li>168: twenty-four people holding Full Houses of Aces over Queens
+            <li>...
+            <li>321: twenty-four people holding Full Houses of Deuces over Fours
+            <li>322: twenty-four people holding Full Houses of Deuces over Treys
+        </ul>
+    </div>
+    <p>Note that by using combinatorics, we can verify these totals. Assume you have a Full House of Aces over Kings. There are <code>C(4,3)</code> possible ways to select three Aces out of a possible four, and <code>C(4,2)</code> possible ways to choose two Kings out of a possible four. This yields 4 x 6, or 24 possible combinations of such hands.</p>
+    <p>For query #323, four people will step foward, each holding a <code>AKQJ9</code> Flush. Then, four people holding <code>AKQJ8</code> Flushes, and so forth.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>323: four people holding AKQJ9 Flushes
+            <li>324: four people holding AKQJ8 Flushes
+            <li>...
+            <li>1598: four people holding 76432 Flushes
+            <li>1599: four people holding 75432 Flushes
+        </ul>
+    </div>
+    <p>For our next query, we get a whopping 1020 people step forward with Ace High Straights. This is followed by another 1020 people with King High Straights, and so on down the line.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>1600: 1,020 people holding Ace High Straights
+            <li>1601: 1,020 people holding King High Straights
+            <li>...
+            <li>1608: 1,020 people holding Six High Straights
+            <li>1609: 1,020 people holding Five High Straights
+        </ul>
+    </div>
+    <p>Next comes all the Three of a Kinds, 64 people each.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>1610: sixty-four people holding AAAKQ
+            <li>1611: sixty-four people holding AAAKJ
+            <li>...
+            <li>2466: sixty-four people holding 22253
+            <li>2467: sixty-four people holding 22243
+        </ul>
+    </div>
+    <p>Then the people in groups of 144, each holding Two Pair.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>2468: 144 people holding AAKKQ
+            <li>2469: 144 people holding AAKKJ
+            <li>...
+            <li>3324: 144 people holding 33225
+            <li>3325: 144 people holding 33224
+        </ul>
+    </div>
+    <p>Almost done!  Next comes the One Pair hands, 384 people each.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>3326: 384 people holding AAKQJ
+            <li>3327: 384 people holding AAKQT
+            <li>...
+            <li>6184: 384 people holding 22643
+            <li>6185: 384 people holding 22543
+        </ul>
+    </div>
+    <p>And finally, we have the "dreck" High Card hands, with 1,020 people per hand. Notice they are identical to the above "Flush" hands, except these are not flushes.</p>
+    <div class="p-3 bg-light border rounded">
+        <ul class="fw-semibold mb-0">
+            <li>6186: 1,020 people holding AKQJ9
+            <li>6187: 1,020 people holding AKQJ8
+            <li>...
+            <li>7461: 1,020 people holding 76432
+            <li>7462: 1,020 people holding 75432
+        </ul>
+    </div>
+    <p>There! After enumerating and collapsing all the 2.6 million unique five-card poker hands, we wind up with just 7462 distinct poker hand values. That was pretty surprising to me when I saw the final total. If you are interested in seeing a table of all 7462 values, you'll find it <a href="http://www.suffecool.net/poker/7462.html">here</a>. This is how the numbers stack up:</p>
+    <div class="table-responsive d-flex justify-content-center">
+        <table class="table table-bordered table-striped text-center w-auto">
+            <thead class="table-dark">
+                <tr>
+                    <th>Hand Value</th>
+                    <th>Unique</th>
+                    <th>Distinct</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Straight Flush</td><td class="text-end">40</td><td class="text-end">10</td></tr>
+                <tr><td>Four of a Kind</td><td class="text-end">624</td><td class="text-end">156</td></tr>
+                <tr><td>Full Houses</td><td class="text-end">3,744</td><td class="text-end">156</td></tr>
+                <tr><td>Flush</td><td class="text-end">5,108</td><td class="text-end">1,277</td></tr>
+                <tr><td>Straight</td><td class="text-end">10,200</td><td class="text-end">10</td></tr>
+                <tr><td>Three of a Kind</td><td class="text-end">54,912</td><td class="text-end">858</td></tr>
+                <tr><td>Two Pair</td><td class="text-end">123,552</td><td class="text-end">858</td></tr>
+                <tr><td>One Pair</td><td class="text-end">1,098,240</td><td class="text-end">2,860</td></tr>
+                <tr><td>High Card</td><td class="text-end">1,302,540</td><td class="text-end">1,277</td></tr>
+            </tbody>
+            <tfoot>
+                <tr class="table-warning fw-bold">
+                    <td>TOTAL</td>
+                    <td class="text-end">2,598,960</td>
+                    <td class="text-end">7,462</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <p>Once I determined that there were only 7462 distinct values of poker hands, I needed a way to quickly transform each of the 2,598,960 unique five-card poker hands into its actual value. To complicate matters, the algorithm needed to be order independant. In other words, if I pass the cards <b>Kd Qs Jc Th 9s</b> to my evaluator, it must generate the value 1601. However, if I change the order of the cards in any fashion, it must <em>still</em> return the value of 1601. Mixing up the five cards does not change the overall value of the hand. At first, I thought that I could always simply sort the hand first before passing it to the evaluator; but sorting takes time, and I didn't want to waste any CPU cycles sorting hands. I needed a method that didn't care what order the five cards were given as.</p>
+    <p>After a lot of thought, I had a brainstorm to use prime numbers. I would assign a prime number value to each of the thirteen card ranks, in this manner:</p>
+    <div class="table-responsive d-flex justify-content-center">
+        <table class="table table-bordered text-center w-auto">
+            <thead class="table-dark">
+                <tr>
+                    <th>Rank</th>
+                    <th>Deuce</th>
+                    <th>Trey</th>
+                    <th>Four</th>
+                    <th>Five</th>
+                    <th>Six</th>
+                    <th>Seven</th>
+                    <th>Eight</th>
+                    <th>Nine</th>
+                    <th>Ten</th>
+                    <th>Jack</th>
+                    <th>Queen</th>
+                    <th>King</th>
+                    <th>Ace</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row" class="table-dark">Prime</th>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>5</td>
+                    <td>7</td>
+                    <td>11</td>
+                    <td>13</td>
+                    <td>17</td>
+                    <td>19</td>
+                    <td>23</td>
+                    <td>29</td>
+                    <td>31</td>
+                    <td>37</td>
+                    <td>41</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p>The beauty of this system is that if you <em><b>multiply</b></em> the prime values of the rank of each card in your hand, you get a unique product, regardless of the order of the five cards. In my above example, the King High Straight hand will <em>always</em> generate a product value of 14,535,931. Since multiplication is one of the fastest calculations a computer can make, we have shaved hundreds of millseconds off our time had we been forced to sort each hand before evaluation.</p>
+    <p>One last step is required, however, before multiplying our prime rank values. We must first check to see if all five cards are of the same suit. It is extremely important that our evaluator realize that the value of a <code>KQJT9</code> hand is <em>much</em> higher if all the suits are the same.</p>
+    <p>Okay. At this point, I was ready to start writing some code. I decided to use the following bit scheme for a single card, where each card is of type <code><b>integer</b></code> (and therefore, four bytes long).</p>
+    <div class="text-center text-warning">
+        <pre class="d-inline-block text-start bg-dark text-light p-3 rounded">
+<b>+--------+--------+--------+--------+
+|xxx<span class="text-warning">bbbbb</span>|<span class="text-warning">bbbbbbbb</span>|cdhs<span class="text-info">rrrr</span>|xx<span class="text-success">pppppp</span>|
++--------+--------+--------+--------+</b>
+  </pre>
+
+        <p class="text-success mb-1"><b>p</b> = prime number of rank (deuce = 2, trey = 3, four = 5, ... ace = 41)</p>
+        <p class="text-info mb-1"><b>r</b> = rank of card (deuce = 0, trey = 1, four = 2, five = 3, ... ace = 12)</p>
+        <p class="mb-1">cdhs = suit of card (bit turned on based on suit of card)</p>
+        <p class="text-warning"><b>b</b> = bit turned on depending on rank of card</p>
+    </div>
+
+    <p>Using such a scheme, here are some bit pattern examples:</p>
+
+    <div class="text-center text-warning">
+        <pre class="d-inline-block text-start bg-dark text-light p-3 rounded">
+<span class="text-success">xxxAKQJT 98765432 CDHSrrrr xxPPPPPP</span>
+00001000 00000000 01001011 00100101    King of Diamonds
+00000000 00001000 00010011 00000111    Five of Spades
+00000010 00000000 10001001 00011101    Jack of Clubs
+  </pre>
+    </div>
+    <p>Now, for my evaluator function, I would pass in five integers, each representing one of the five cards in the hand to evaluate. We will label these <code><b>c1</b></code> through <code><b>c5</b></code>. First, we check to see if all the suits are the same. If so, then we have either a <em>Flush</em> (or <em>Straight Flush</em>). The quickest way to calculate this is by evaluating this:</p>
+<div class="text-center">
+        <pre class="d-inline-block bg-dark text-light p-3 rounded mb-0">
+<b>c1 AND c2 AND c3 AND c4 AND c5 AND 0xF000</b>
+  </pre>
+    </div>
+
+    <p>This is bit-wise AND, not a boolean AND, by the way. If the above expression yields a value of zero, then we don't have a <em>Flush</em>. If it is non-zero, then we do. Assuming we have a <em>Flush</em>, I needed a fast way to calculate the hand's actual value (i.e. convert it to a value from 1 to 7462). Table lookups are one of the fastest ways to generate values based on index keys, so I used the following coding technique.</p>
+    <p>First, I do another bitwise OR of all five cards, and then bit shift that value 16 bits to the right:</p>
+
+    <div class="text-center text-warning">
+        <pre class="d-inline-block bg-dark text-light p-3 rounded mb-0">
+<b>q = (c1 OR c2 OR c3 OR c4 OR c5) >> 16</b>
+  </pre>
+    </div>
+
+    <p>Note that if we have a <em>Flush</em>, then all five card ranks are guaranteed to be unique. We should have exactly <strong><em>five</em></strong> bits set in our shifted value. The smallest bit pattern would be <code><strong>0x001F</strong></code> (decimal 31), and the highest would be <code><strong>0x1F00</strong></code> (decimal 7936). I created a lookup array containing 7,937 elements, and then populated it with the correct hand values based on each valid bit pattern. Let's call this array <code><strong>flushes[]</strong></code>. If you checked the value of <code><strong>flushes[31]</strong></code>, you should find the value <code>9</code>, because <code>9</code> is the distinct value for a Six-High Straight Flush. As another example, let's say you were holding an <code>AKQJ9</code> Flush. The bit pattern for that hand would be <code><strong>0x1E80</strong></code>, or decimal 7808. This means that <code><strong>flushes[7808]</strong></code> should hold the value <code>323</code>, which is the distinct value for AKQJ9 Flushes. Obviously, there are a lot of entries in this array that will never be accessed. That is the price of lookup tables: you gain speed in favor of “wasted” space. However, since the highest distinct hand value is 7,462, we can make our array of type <code><strong>short</strong></code>. That means our array will take up only 15,874 bytes — not very large at all.</p>
+    <p>If we determine that we do not have a <em>Flush</em> or <em>Straight Flush</em> hand, we move on to tackle <em>Straight</em> and <em>High Card</em> hands. Again, we use a lookup table for speed. We create another array, which we will call <code><strong>unique5[]</strong></code>. We use the same index <code><strong>q</strong></code> as the index into this new array. If the value found there is zero, then we do not have a <em>Straight</em> or <em>High Card</em> hand. If it is non-zero, then it holds the actual hand’s distinct value. For example, a King-High Straight has a bit pattern of <code><strong>0x0F80</strong></code>, or decimal 3968. This means that <code><strong>unique5[3968]</strong></code> should hold the value <code>1601</code>. The absolute worst poker hand of <code>75432</code> (unsuited) would yield <code><strong>unique5[0x002F] = unique5[47]</strong></code>, or <code>7462</code>.</p>
+    <p>With just two easy calculations and two quick lookups, we have eliminated 2574 out of the 7462 possible distinct hand values. That's a little over a third of all the hands. Now it's time to use our trick with prime numbers. We take each card, extract its prime number value, and then multiply them all together:</p>
+
+    <div class="text-center text-warning">
+        <pre class="d-inline-block bg-dark text-light p-3 rounded mb-0">
+<strong>q = (c1 AND 0xFF) * (c2 AND 0xFF) * ... * (c5 AND 0xFF)</strong>
+  </pre>
+    </div>
+
+    <p>Again, these are bitwise ANDs. The resulting values will range from the small to the very large. The smallest value is obtained if you hold the hand <strong>22223</strong> <em>(four Deuces with a Trey kicker)</em>. Multiplying its prime values yields the number 48. The largest value comes with holding <strong>AAAAK</strong>. Doing the math, we get 104,553,157 (41 × 41 × 41 × 41 × 37). These numbers are way too large to use a lookup table, so we must find some other method to convert these values to their proper distinct hand value. Since there are only 4,888 remaining hand values (7,462 minus 2,574), I decided to use a <a href="https://en.wikipedia.org/wiki/Binary_search_algorithm" rel="nofollow">binary search</a> algorithm. It’s fast, with a complexity of O(<em>log n</em>). I took the remaining 4,888 hands, calculated the prime multiplication value for each, placed them in an array, and then sorted it. When I need to find a distinct hand value, after all previous efforts fail, I perform a binary search, which returns an index. That index is then used in a regular array that holds the remaining distinct values.</p>
+    <p>That's it! I coded this algorithm, and ran it against some of the other poker evaluators out there, and it beat them all. I'm pretty proud of it, and kudos to you if you've actually read this far. For your prize, you get to download the actual source code to experiment with.</p>
+
+    <hr class="w-75 mx-auto my-4">
+
+    <blockquote>
+        <b>LATE BREAKING NEWS!!!</b>  Paul Senzee of Florida decided that he could
+        speed up my evaluator by using a pre-computed perfect hash function
+        instead of a binary search for those final 4888 hand values.  He
+        says he obtained a speedup factor of 2.7x!  Not too shabby!  Anyway,
+        you can read about his optimization and download his new evaluator
+        code <a href="http://senzee.blogspot.com/2006/06/some-perfect-hash.html">here</a>.
+    </blockquote>
+
+    <hr class="w-75 mx-auto my-4">
+
+    <ul>
+        <li><a href="http://www.suffecool.net/poker/code/poker.h">poker.h</a>
+        <li><a href="http://www.suffecool.net/poker/code/pokerlib.c">pokerlib.c</a>
+        <li><a href="http://www.suffecool.net/poker/code/arrays.h">arrays.h</a>
+        <li><a href="http://www.suffecool.net/poker/code/allfive.c">allfive.c</a>
+        <li><a href="http://www.suffecool.net/poker/code/Makefile">Makefile</a>
+    </ul>
+
+</div>

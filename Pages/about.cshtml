@@ -1,0 +1,16 @@
+﻿@page
+@model poker.net.Pages.aboutModel
+@{
+    ViewData["Title"] = "About Poker Calculator";
+}
+<div class="container p-5">
+    <h1 class="display-4 text-center mb-5">About John Belthoff's Poker Calculator</h1>
+    <p>This project began as a personal challenge - to see if I could recreate software capable of running a full game of Texas Hold’em Poker from scratch.</p>
+    <p>The original version was built years ago using Microsoft ASP.NET in C#, relying heavily on a C++-to-C# port of <span class="fw-bold">Cactus Kev’s Poker Hand Evaluator</span>. For reference and transparency, I’ve included a <a href="/cactus_kev">copy of Cactus Kev’s original article</a> here on the site so you can follow along with the logic and methodology behind the hand evaluations.</p>
+    <p>This <span class="fw-bold">second version</span> of the Poker Calculator has been <span class="fw-bold">completely rewritten for the latest .NET platform</span>, taking advantage of modern features and performance improvements in the framework. The update streamlines the codebase, enhances reliability, and sets the stage for future functionality such as multiplayer interactivity and richer game controls.</p>
+    <p>At this point, the game supports up to nine players, rotates the dealer, evaluates all hands, and displays the winning result. While there’s still plenty of room for new features, the core challenge - accurately simulating the mechanics of Texas Hold’em - has been achieved.</p>
+    <p>I’ll continue to refine and expand the project over time, documenting progress and updates here.</p>
+    <p>Enjoy exploring it - and have fun at the table!</p>
+    <p></p>
+    <p><a class="btn btn-lg btn-primary" href="/">Play Poker</a></p>
+</div>
