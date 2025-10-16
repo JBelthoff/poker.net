@@ -1,7 +1,14 @@
+using Microsoft.Data.SqlClient;
+using System.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+// Register Dapper-compatible IDbConnection factory
+builder.Services.AddScoped<IDbConnection>(sp =>
+    new SqlConnection(builder.Configuration.GetConnectionString("dbConn")));
 
 var app = builder.Build();
 
