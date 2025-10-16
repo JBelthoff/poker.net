@@ -7,3 +7,43 @@
     <h1 class="display-4">Poker Calculator</h1>
     <p><a href="/about">About Poker Calculator</a> | <a href="https://github.com/JBelthoff/poker.johnbelthoff.com" target="_blank">See the code</a> | <a href="https://www.johnbelthoff.com">Studio JB</a></p>
 </div>
+
+
+
+
+
+<div class="container p-5">
+    <h2 class="display-6">Raw Deck Shuffled</h2>
+    @if (Model.Deck is null || Model.Deck.Count == 0)
+    {
+        <p>No cards found.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Face</th>
+                        <th>Suit</th>
+                        <th>Color</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Deck)
+                    {
+                        <tr>
+                            <td>@c.Id</td>
+                            <td>@c.Face</td>
+                            <td>@Html.Raw(@c.Suit)</td>
+                            <td>@c.Color</td>
+                            <td>@c.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

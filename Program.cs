@@ -1,14 +1,19 @@
 using Microsoft.Data.SqlClient;
 using System.Data;
+using poker.net.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddMemoryCache();
 
-// Register Dapper-compatible IDbConnection factory
+// Dapper-compatible connection (scoped per request)
 builder.Services.AddScoped<IDbConnection>(sp =>
-    new SqlConnection(builder.Configuration.GetConnectionString("dbConn")));
+    new SqlConnection(builder.Configuration.GetConnectionString("DBConn")));
+
+// Register your helper
+builder.Services.AddScoped<DbHelper>();
 
 var app = builder.Build();
 
