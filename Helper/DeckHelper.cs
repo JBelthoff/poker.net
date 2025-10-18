@@ -50,7 +50,7 @@
             var builder = new StringBuilder();
             for (int i = 0; i < cards.Count; i++)
             {
-                builder.Append(cards[i].Id);
+                builder.Append(cards[i].ID);
                 if (i < cards.Count - 1)
                     builder.Append('|');
             }
@@ -71,7 +71,7 @@
             {
                 copy.Add(new Card
                 {
-                    Id = c.Id,
+                    ID = c.ID,
                     Color = c.Color,
                     Face = c.Face,
                     Suit = c.Suit,

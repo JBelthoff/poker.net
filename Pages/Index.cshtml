@@ -6,13 +6,79 @@
 <div class="container text-center p-5">
     <h1 class="display-4">Poker Calculator</h1>
     <p><a href="/about">About Poker Calculator</a> | <a href="https://github.com/JBelthoff/poker.johnbelthoff.com" target="_blank">See the code</a> | <a href="https://www.johnbelthoff.com">Studio JB</a></p>
+    <p>@Model.DealerID</p>
 </div>
 
-<div class="container p-5">
-    <h2>Texas Holdem</h2>
-    <div class="mb-4"><a href="#" class="btn btn-dark">Deal</a></div>
-</div>
 
+@if (Model.ShowShufflePanel)
+{
+    <div class="container p-5">
+        <h2>Texas Holdem</h2>
+        <form method="post">
+            <input type="hidden" name="action" value="deal">
+            <input type="hidden" name="dealerid" value="@Model.DealerID">
+            <button type="submit" class="btn btn-dark">Deal</button>
+        </form>
+    </div>
+}
+
+@if (Model.ShowFlopPanel)
+{
+    <div class="container p-5">
+        <h2>Texas Holdem</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                @for (int i = 1; i < 10; i++)
+                {
+                    if(i==Model.DealerID)
+                    {
+                        <th class="table-info">Dealer @i</th>
+                    }
+                    else
+                    {
+                        <th>Player @i</th>
+                    }
+                }
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="text-danger">Q♦</span> <span class="text-danger">7♦</span></td>
+                        <td><span class="text-danger">6♦</span> <span class="text-dark">6♣</span></td>
+                        <td><span class="text-dark">J♠</span> <span class="text-dark">6♠</span></td>
+                        <td><span class="text-dark">10♠</span> <span class="text-danger">K♥</span></td>
+                        <td><span class="text-dark">4♠</span> <span class="text-dark">8♣</span></td>
+                        <td><span class="text-danger">5♦</span> <span class="text-danger">10♥</span></td>
+                        <td><span class="text-danger">7♥</span> <span class="text-dark">7♠</span></td>
+                        <td><span class="text-dark">2♠</span> <span class="text-dark">Q♣</span></td>
+                        <td><span class="text-danger">3♦</span> <span class="text-dark">9♣</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bg-light text-dark p-1 rounded mb-4">
+            <h2 class="display-6 fw-semibold mb-3">Community Cards:</h2>
+            <p class="lead text-center">&nbsp;&nbsp;</p>
+        </div>
+
+        <form method="post">
+            <input type="hidden" name="dealerid" value="@Model.DealerID">
+            <input type="hidden" name="cardids" value="@Model.CardIDs">
+            <button type="submit" name="action" value="flop" class="btn btn-dark">Deal Flop</button>
+            <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
+        </form>
+
+
+
+
+
+    </div>
+
+
+}
 
 
 @* <div id="pnlTestfull" class="container p-5">
@@ -101,23 +167,27 @@
 
 </div> *@
 
-<div id="pnlTest" class="container p-5">
-    <hr style="margin: 24px auto 0 auto;">
-    <table>
-        <tbody>
-            <tr>
-                <th>Deck Shuffled</th>
-            </tr>
-            <tr>
-                <td>
 
-                    @for (var i = 0; i < Model.ShuffledDeck.Count; i++)
-                    {
-                        @Html.Raw($"{i + 1}: <span style=\"color:#{Model.ShuffledDeck[i].Color};\">" +
-                        $"{Model.ShuffledDeck[i].Face}{Model.ShuffledDeck[i].Suit}</span><br>")
-                                        }
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+
+@if (Model.ShowTestPanel)
+{
+    <div class="container p-5">
+        <hr style="margin: 24px auto 0 auto;">
+        <table>
+            <tbody>
+                <tr>
+                    <th>Deck Shuffled</th>
+                </tr>
+                <tr>
+                    <td>
+                        @for (var i = 0; i < Model.ShuffledDeck.Count; i++)
+                        {
+                            @Html.Raw($"{i + 1}: <span style=\"color:#{Model.ShuffledDeck[i].Color};\">" +
+                            $"{Model.ShuffledDeck[i].Face}{Model.ShuffledDeck[i].Suit}</span><br>")
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}

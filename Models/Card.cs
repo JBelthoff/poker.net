@@ -9,7 +9,7 @@
         /// <summary>
         /// Gets or sets the unique identifier for the card.
         /// </summary>
-        public int Id { get; set; }
+        public int ID { get; set; }
 
         /// <summary>
         /// Gets or sets the color of the card (e.g., Red or Black).
