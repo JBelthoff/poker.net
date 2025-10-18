@@ -5,14 +5,18 @@ using poker.net.Helper;
 using poker.net.Models;
 using poker.net.Services;
 using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace poker.net.Pages
 {
     public class IndexModel : PageModel
     {
+        #region Properties
         private readonly ILogger<IndexModel> _logger;
         private readonly DbHelper _db;
+
+        public int[] h, r;
 
         public bool ShowShufflePanel { get; set; }
 
@@ -23,12 +27,15 @@ namespace poker.net.Pages
         public bool ShowTurnPanel { get; set; }
 
         public bool ShowRiverPanel { get; set; }
-        
+
+        public bool ShowWinnerPanel { get; set; }
+
         public bool ShowTestPanel { get; set; }
 
         [BindProperty]
         public int DealerID { get; set; } = 8;
 
+        [BindProperty]
         public string CardIDs { get; set; }
 
         public IReadOnlyList<Card> Deck { get; set; } = Array.Empty<Card>();
@@ -36,6 +43,8 @@ namespace poker.net.Pages
         public List<Card> ShuffledDeck { get; set; } = new();
 
         public List<List<Card>> lPlayerHands = new();
+
+        #endregion
 
         public IndexModel(ILogger<IndexModel> logger, DbHelper db)
         {
@@ -51,6 +60,7 @@ namespace poker.net.Pages
             ShowFlopPanel = false;
             ShowTurnPanel = false;
             ShowRiverPanel = false;
+            ShowWinnerPanel = false;
             ShowTestPanel = false;
             
         }
@@ -74,6 +84,14 @@ namespace poker.net.Pages
                     await DoFlop();
                     break;
 
+                case "turn":
+                    await DoTurn();
+                    break;
+
+                case "river":
+                    await DoRiver();
+                    break;
+
                     // other actions
                     // case "shuffle":
                     //     await DoShuffle();
@@ -82,7 +100,6 @@ namespace poker.net.Pages
 
             return Page();
         }
-
 
         private void DoShuffle()
         {
@@ -97,8 +114,6 @@ namespace poker.net.Pages
             
         }
 
-
-
         public async Task DoDeal()
         {
             Deck = await _db.RawDeckAsync();
@@ -110,7 +125,7 @@ namespace poker.net.Pages
             // Use bound DealerID; no Request.Form
             await _db.RecordNewGameAsync(CardIDs, NetworkHelper.GetIPAddress(HttpContext));
 
-            // Deal the Cards
+            // Get Players Hands
             List<Card> lTemp;
             for (Int32 i = 0; i < 9; i++)
             {
@@ -128,60 +143,180 @@ namespace poker.net.Pages
 
             _logger.LogInformation("DoDeal: Deck loaded & shuffled ({Count} cards).", ShuffledDeck.Count);
         }
-        
 
         public async Task DoFlop()
         {
-            //DealerID += Convert.ToInt32(Request.Form["dealerid"]);
 
+            if (string.IsNullOrWhiteSpace(CardIDs))
+            {
+                _logger.LogWarning("DoFlop: No CardIDs found in bound property.");
+                return;
+            }
 
             Deck = await _db.RawDeckAsync();
-            ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. Deck]);
-            DeckHelper.Shuffle(ShuffledDeck);
-            ShowTestPanel = true;
-            
+            var deckLookup = Deck.ToDictionary(c => c.ID);
 
-            _logger.LogInformation("DoDeal: Deck loaded & shuffled ({Count} cards).", ShuffledDeck.Count);
+            ShuffledDeck = CardIDs
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(idStr =>
+                {
+                    if (int.TryParse(idStr, out int id) && deckLookup.TryGetValue(id, out var card))
+                        return card;
+                    return null;
+                })
+                .Where(c => c != null)
+                .ToList()!;
+
+            // Get Players Hands
+            List<Card> lTemp;
+            for (Int32 i = 0; i < 9; i++)
+            {
+                lTemp = new List<Card>();
+                lTemp.Add(ShuffledDeck[i]);
+                lTemp.Add(ShuffledDeck[i + 9]);
+                for (Int32 x = 18; x < 23; x++)
+                    lTemp.Add(ShuffledDeck[x]);
+                lPlayerHands.Add(lTemp);
+            }
+
+            ShowTestPanel = true;
+            ShowFlopPanel = false;
+            ShowTurnPanel = true;
+
+            _logger.LogInformation("DoFlop: Deck restored from hidden field ({Count} cards).", ShuffledDeck.Count);
+        }
+
+        public async Task DoTurn()
+        {
+            if (string.IsNullOrWhiteSpace(CardIDs))
+            {
+                _logger.LogWarning("DoFlop: No CardIDs found in bound property.");
+                return;
+            }
+
+            Deck = await _db.RawDeckAsync();
+            var deckLookup = Deck.ToDictionary(c => c.ID);
+
+            ShuffledDeck = CardIDs
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(idStr =>
+                {
+                    if (int.TryParse(idStr, out int id) && deckLookup.TryGetValue(id, out var card))
+                        return card;
+                    return null;
+                })
+                .Where(c => c != null)
+                .ToList()!;
+
+            // Get Players Hands
+            List<Card> lTemp;
+            for (Int32 i = 0; i < 9; i++)
+            {
+                lTemp = new List<Card>();
+                lTemp.Add(ShuffledDeck[i]);
+                lTemp.Add(ShuffledDeck[i + 9]);
+                for (Int32 x = 18; x < 23; x++)
+                    lTemp.Add(ShuffledDeck[x]);
+                lPlayerHands.Add(lTemp);
+            }
+
+            ShowTestPanel = true;
+            ShowFlopPanel = false;
+            ShowTurnPanel = false;
+            ShowRiverPanel = true;
+
+            _logger.LogInformation("DoTurn: Deck restored from hidden field ({Count} cards).", ShuffledDeck.Count);
+
+        }
+
+        public async Task DoRiver()
+        {
+            if (string.IsNullOrWhiteSpace(CardIDs))
+            {
+                _logger.LogWarning("DoFlop: No CardIDs found in bound property.");
+                return;
+            }
+
+            Deck = await _db.RawDeckAsync();
+            var deckLookup = Deck.ToDictionary(c => c.ID);
+
+            ShuffledDeck = CardIDs
+                .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                .Select(idStr =>
+                {
+                    if (int.TryParse(idStr, out int id) && deckLookup.TryGetValue(id, out var card))
+                        return card;
+                    return null;
+                })
+                .Where(c => c != null)
+                .ToList()!;
+
+            // Get Players Hands
+            List<Card> lTemp;
+            for (Int32 i = 0; i < 9; i++)
+            {
+                lTemp = new List<Card>();
+                lTemp.Add(ShuffledDeck[i]);
+                lTemp.Add(ShuffledDeck[i + 9]);
+                for (Int32 x = 18; x < 23; x++)
+                    lTemp.Add(ShuffledDeck[x]);
+                lPlayerHands.Add(lTemp);
+            }
+
+            // The Index of the winnign hands from each players hand
+            Int32[] iWinIndex = GetPlayersHandWinIndexes(lPlayerHands);
+
+            // Get Table Winner
+            h = new Int32[9];
+            r = new Int32[9];
+            for (Int32 i = 0; i < lPlayerHands.Count; i++)
+            {
+                h[i] = PokerLib.eval_5hand_fast_jb(GetSubHand(lPlayerHands[i], iWinIndex[i]));
+                r[i] = PokerLib.hand_rank_jb(h[i]);
+            }
+
+            ShowTestPanel = true;
+            ShowFlopPanel = false;
+            ShowTurnPanel = false;
+            ShowRiverPanel = false;
+            ShowWinnerPanel = true;
+
+            _logger.LogInformation("DoRiver: Deck restored from hidden field ({Count} cards).", ShuffledDeck.Count);
+
         }
 
 
 
+        private Int32[] GetPlayersHandWinIndexes(List<List<Card>> l)
+        {
+            Trace.Write("GetPlayersHandWinIndexes()", "Started");
+            Int32[] iWinIndex = new Int32[l.Count];
+            for (Int32 x = 0; x < l.Count; x++)
+            {
+                UInt16[] iHandValues = new UInt16[21];
+                List<List<Card>> lSubHands = new List<List<Card>>();
+                for (Int32 i = 0; i < 21; i++)
+                {
+                    List<Card> lSubHand = new List<Card>();
+                    for (Int32 j = 0; j < 5; j++)
+                        lSubHand.Add(l[x][PokerLib.perm7[i, j]]);
+                    lSubHands.Add(lSubHand);
+                    iHandValues[i] = PokerLib.eval_5hand_fast_jb(lSubHand);
+                }
+                iWinIndex[x] = iHandValues.ToList().IndexOf(iHandValues.Min());
+            }
+            Trace.Write("GetPlayersHandWinIndexes()", "Returning");
+            return iWinIndex;
+        }
 
-        
+        private List<Card> GetSubHand(List<Card> l, Int32 iIndex)
+        {
+            List<Card> lSubHand = new List<Card>();
+            for (Int32 j = 0; j < 5; j++)
+                lSubHand.Add(l[PokerLib.perm7[iIndex, j]]);
 
-        //public async Task<PartialViewResult> OnGetDealAsync()
-        //{
-        //    // 1) Get raw deck (cached/DB)
-        //    Deck = await _db.RawDeckAsync();
-
-        //    // 2) Deep copy, then shuffle
-        //    ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. Deck]);
-        //    DeckHelper.Shuffle(ShuffledDeck);
-
-        //    _logger.LogInformation("Index.OnGetDealAsync: Loaded deck & Shuffled (Count={Count})", ShuffledDeck.Count);
-
-        //    // Return partial HTML for the "Deck Shuffled" section
-        //    return new PartialViewResult
-        //    {
-        //        ViewName = "_ShuffledDeck",
-        //        ViewData = new ViewDataDictionary<List<Card>>(ViewData, ShuffledDeck)
-        //    };
-        //}
-
-        //public async Task OnGetAsync()
-        //{
-        //    // 1) Get raw deck (cached/DB)
-        //    Deck = await _db.RawDeckAsync();
-
-        //    // 2) Deep copy, then shuffle
-        //    ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. Deck]);
-        //    DeckHelper.Shuffle(ShuffledDeck);
-
-        //    _logger.LogInformation("Index.OnGetAsync: Loaded deck & Shuffled");
-        //}
+            return lSubHand;
+        }
 
     }
-
-
-
 }

@@ -30,29 +30,29 @@
             <table class="table table-bordered table-striped text-center align-middle">
                 <thead class="table-dark">
                     <tr>
-                @for (int p = 0; p < Model.lPlayerHands.Count; p++)
-                {
-                    var isDealer = (p + 1) == Model.DealerID;
-                    <th class="@(isDealer ? "table-info" : "")">
-                        @(isDealer ? $"Dealer {p + 1}" : $"Player {p + 1}")
-                    </th>
-                }
+                        @for (int i = 0; i < 9; i++)
+                        {
+                            var isDealer = (i + 1) == Model.DealerID;
+                            <th class="@(isDealer ? "table-info" : "")">
+                                @(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")
+                            </th>
+                        }
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        @for (int p = 0; p < Model.lPlayerHands.Count; p++)
+                        @{ int startSeat = (Model.DealerID % 9) + 1; }
+                        @for (int i = 0; i < 9; i++)
                         {
-                            var hand = Model.lPlayerHands[p];
+                            int pos = ((i + 1 - startSeat + 9) % 9);
 
-                            <td>
-                                @for (int c = 0; c < 2; c++)
-                                {
-                                    @Html.Raw($"<span style=\"color:#{hand[c].Color};\">" +
-                                    $"{hand[c].Face}{hand[c].Suit}</span><br>")
-                                                }
-                    </td>
-                                        }
+                        <td class="text-center" style="white-space: nowrap;">
+                            @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos].Color};\">" +
+                                $"{Model.ShuffledDeck[pos].Face}{Model.ShuffledDeck[pos].Suit}</span> ")
+                            @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos + 9].Color};\">" +
+                                $"{Model.ShuffledDeck[pos + 9].Face}{Model.ShuffledDeck[pos + 9].Suit}</span>")
+                        </td>
+                        }
                     </tr>
                 </tbody>
             </table>
@@ -65,8 +65,8 @@
 
         <form method="post">
             <input type="hidden" asp-for="DealerID" />
+            <input type="hidden" asp-for="CardIDs" />
             @Html.AntiForgeryToken()
-            <input type="hidden" name="cardids" value="@Model.CardIDs">
             <button type="submit" name="action" value="flop" class="btn btn-dark">Deal Flop</button>
             <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
         </form>
@@ -74,6 +74,250 @@
 
 
 }
+
+
+
+
+
+@if (Model.ShowTurnPanel)
+{
+    
+
+    <div class="container p-5">
+        <h2>Texas Holdem</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        @for (int i = 0; i < 9; i++)
+                        {
+                            var isDealer = (i + 1) == Model.DealerID;
+                            <th class="@(isDealer ? "table-info" : "")">
+                                @(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        @{
+                            int startSeat = (Model.DealerID % 9) + 1;
+                        }
+                        @for (int i = 0; i < 9; i++)
+                        {
+                            int pos = ((i + 1 - startSeat + 9) % 9);
+
+                            <td class="text-center" style="white-space: nowrap;">
+                                @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos].Color};\">" +
+                                $"{Model.ShuffledDeck[pos].Face}{Model.ShuffledDeck[pos].Suit}</span> ")
+                        @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos + 9].Color};\">" +
+                                                $"{Model.ShuffledDeck[pos + 9].Face}{Model.ShuffledDeck[pos + 9].Suit}</span>")
+                    </td>
+                                        }
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-light text-dark p-1 rounded mb-4">
+        <h2 class="display-6 fw-semibold mb-3">Community Cards:</h2>
+        <p class="lead text-center">
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[17].Color};">{Model.ShuffledDeck[17].Face}{Model.ShuffledDeck[17].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[18].Color};">{Model.ShuffledDeck[18].Face}{Model.ShuffledDeck[18].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[19].Color};">{Model.ShuffledDeck[19].Face}{Model.ShuffledDeck[19].Suit}</span>""")
+        </p>
+    </div>
+
+    <form method="post">
+        <input type="hidden" asp-for="DealerID" />
+        <input type="hidden" asp-for="CardIDs" />
+        @Html.AntiForgeryToken()
+        <button type="submit" name="action" value="turn" class="btn btn-dark">Deal Turn</button>
+        <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
+    </form>
+</div>
+
+
+
+}
+
+@if (Model.ShowRiverPanel)
+{
+    <div class="container p-5">
+        <h2>Texas Holdem</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        @for (int i = 0; i < 9; i++)
+                        {
+                            var isDealer = (i + 1) == Model.DealerID;
+                            <th class="@(isDealer ? "table-info" : "")">
+                                @(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        @{
+                            int startSeat = (Model.DealerID % 9) + 1;
+                        }
+                        @for (int i = 0; i < 9; i++)
+                        {
+                            int pos = ((i + 1 - startSeat + 9) % 9);
+
+                            <td class="text-center" style="white-space: nowrap;">
+                                @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos].Color};\">" +
+                                $"{Model.ShuffledDeck[pos].Face}{Model.ShuffledDeck[pos].Suit}</span> ")
+                        @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos + 9].Color};\">" +
+                                                $"{Model.ShuffledDeck[pos + 9].Face}{Model.ShuffledDeck[pos + 9].Suit}</span>")
+                    </td>
+                                        }
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-light text-dark p-1 rounded mb-4">
+        <h2 class="display-6 fw-semibold mb-3">Community Cards:</h2>
+        <p class="lead text-center">
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[17].Color};">{Model.ShuffledDeck[17].Face}{Model.ShuffledDeck[17].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[18].Color};">{Model.ShuffledDeck[18].Face}{Model.ShuffledDeck[18].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[19].Color};">{Model.ShuffledDeck[19].Face}{Model.ShuffledDeck[19].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[20].Color};">{Model.ShuffledDeck[20].Face}{Model.ShuffledDeck[20].Suit}</span>""")
+        </p>
+    </div>
+
+    <form method="post">
+        <input type="hidden" asp-for="DealerID" />
+        <input type="hidden" asp-for="CardIDs" />
+        @Html.AntiForgeryToken()
+        <button type="submit" name="action" value="river" class="btn btn-dark">Deal River</button>
+        <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
+    </form>
+</div>
+
+}
+
+
+@if (Model.ShowWinnerPanel)
+{
+
+    <div class="container p-5">
+        <h2>Texas Holdem</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        @for (int i = 0; i < 9; i++)
+                        {
+                            var isDealer = (i + 1) == Model.DealerID;
+                            <th class="@(isDealer ? "table-info" : "")">
+                                @(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        @{
+                            int startSeat = (Model.DealerID % 9) + 1;
+                        }
+                        @for (int i = 0; i < 9; i++)
+                        {
+                            int pos = ((i + 1 - startSeat + 9) % 9);
+
+                            <td class="text-center" style="white-space: nowrap;">
+                                @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos].Color};\">" +
+                                $"{Model.ShuffledDeck[pos].Face}{Model.ShuffledDeck[pos].Suit}</span> ")
+                        @Html.Raw($"<span style=\"color:#{Model.ShuffledDeck[pos + 9].Color};\">" +
+                                                $"{Model.ShuffledDeck[pos + 9].Face}{Model.ShuffledDeck[pos + 9].Suit}</span>")
+                    </td>
+                                        }
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="bg-light text-dark p-1 rounded mb-4">
+        <h2 class="display-6 fw-semibold mb-3">Community Cards:</h2>
+        <p class="lead text-center">
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[17].Color};">{Model.ShuffledDeck[17].Face}{Model.ShuffledDeck[17].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[18].Color};">{Model.ShuffledDeck[18].Face}{Model.ShuffledDeck[18].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[19].Color};">{Model.ShuffledDeck[19].Face}{Model.ShuffledDeck[19].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[20].Color};">{Model.ShuffledDeck[20].Face}{Model.ShuffledDeck[20].Suit}</span>""")
+            @Html.Raw($"""<span style="color:#{Model.ShuffledDeck[21].Color};">{Model.ShuffledDeck[21].Face}{Model.ShuffledDeck[21].Suit}</span>""")
+        </p>
+    </div>
+
+
+
+
+    <h2 class="display-6 fw-semibold mb-3">Results:</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Player 1</th>
+                    <th>Player 2</th>
+                    <th>Player 3</th>
+                    <th>Player 4</th>
+                    <th class="table-success">WINNER!</th>
+                    <th>Player 6</th>
+                    <th>Player 7</th>
+                    <th>Player 8</th>
+                    <th>Player 9</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="text-dark">8♣</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-danger">8♥</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-danger">J♥</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-dark">10♣</span> <span class="text-danger">A♦</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-danger">A♥</span> <span class="text-danger">K♦</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-dark">J♠</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-dark">10♠</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-dark">5♠</span> <span class="text-danger">5♦</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    <td><span class="text-danger">J♦</span> <span class="text-danger">Q♥</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                </tr>
+                <tr>
+                    <td><em>2 Pair</em></td>
+                    <td><em>2 Pair</em></td>
+                    <td><em>Pair</em></td>
+                    <td><em>2 Pair</em></td>
+                    <td class="table-success fw-bold">Full House</td>
+                    <td><em>Pair</em></td>
+                    <td><em>Pair</em></td>
+                    <td><em>2 Pair</em></td>
+                    <td><em>Pair</em></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <form method="post">
+        <input type="hidden" asp-for="DealerID" />
+        <input type="hidden" asp-for="CardIDs" />
+        @Html.AntiForgeryToken()
+        <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
+    </form>
+</div>
+}
+
 
 
 @* <div id="pnlTestfull" class="container p-5">
