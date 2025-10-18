@@ -15,9 +15,9 @@
     <div class="container p-5">
         <h2>Texas Holdem</h2>
         <form method="post">
-            <input type="hidden" name="action" value="deal">
-            <input type="hidden" name="dealerid" value="@Model.DealerID">
-            <button type="submit" class="btn btn-dark">Deal</button>
+            <input type="hidden" asp-for="DealerID" />
+            @Html.AntiForgeryToken()
+            <button type="submit" name="action" value="deal" class="btn btn-dark">Deal</button>
         </form>
     </div>
 }
@@ -30,30 +30,29 @@
             <table class="table table-bordered table-striped text-center align-middle">
                 <thead class="table-dark">
                     <tr>
-                @for (int i = 1; i < 10; i++)
+                @for (int p = 0; p < Model.lPlayerHands.Count; p++)
                 {
-                    if(i==Model.DealerID)
-                    {
-                        <th class="table-info">Dealer @i</th>
-                    }
-                    else
-                    {
-                        <th>Player @i</th>
-                    }
+                    var isDealer = (p + 1) == Model.DealerID;
+                    <th class="@(isDealer ? "table-info" : "")">
+                        @(isDealer ? $"Dealer {p + 1}" : $"Player {p + 1}")
+                    </th>
                 }
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><span class="text-danger">Q♦</span> <span class="text-danger">7♦</span></td>
-                        <td><span class="text-danger">6♦</span> <span class="text-dark">6♣</span></td>
-                        <td><span class="text-dark">J♠</span> <span class="text-dark">6♠</span></td>
-                        <td><span class="text-dark">10♠</span> <span class="text-danger">K♥</span></td>
-                        <td><span class="text-dark">4♠</span> <span class="text-dark">8♣</span></td>
-                        <td><span class="text-danger">5♦</span> <span class="text-danger">10♥</span></td>
-                        <td><span class="text-danger">7♥</span> <span class="text-dark">7♠</span></td>
-                        <td><span class="text-dark">2♠</span> <span class="text-dark">Q♣</span></td>
-                        <td><span class="text-danger">3♦</span> <span class="text-dark">9♣</span></td>
+                        @for (int p = 0; p < Model.lPlayerHands.Count; p++)
+                        {
+                            var hand = Model.lPlayerHands[p];
+
+                            <td>
+                                @for (int c = 0; c < 2; c++)
+                                {
+                                    @Html.Raw($"<span style=\"color:#{hand[c].Color};\">" +
+                                    $"{hand[c].Face}{hand[c].Suit}</span><br>")
+                                                }
+                    </td>
+                                        }
                     </tr>
                 </tbody>
             </table>
@@ -65,16 +64,12 @@
         </div>
 
         <form method="post">
-            <input type="hidden" name="dealerid" value="@Model.DealerID">
+            <input type="hidden" asp-for="DealerID" />
+            @Html.AntiForgeryToken()
             <input type="hidden" name="cardids" value="@Model.CardIDs">
             <button type="submit" name="action" value="flop" class="btn btn-dark">Deal Flop</button>
             <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
         </form>
-
-
-
-
-
     </div>
 
 

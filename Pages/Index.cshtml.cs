@@ -14,26 +14,29 @@ namespace poker.net.Pages
         private readonly ILogger<IndexModel> _logger;
         private readonly DbHelper _db;
 
-        public bool ShowShufflePanel { get; private set; }
+        public bool ShowShufflePanel { get; set; }
 
-        public bool ShowDealPanel { get; private set; }
+        public bool ShowDealPanel { get; set; }
 
-        public bool ShowFlopPanel { get; private set; }
+        public bool ShowFlopPanel { get; set; }
 
-        public bool ShowTurnPanel { get; private set; }
+        public bool ShowTurnPanel { get; set; }
 
-        public bool ShowRiverPanel { get; private set; }
+        public bool ShowRiverPanel { get; set; }
         
-        public bool ShowTestPanel { get; private set; }
+        public bool ShowTestPanel { get; set; }
 
-        public int DealerID { get; private set; }
+        [BindProperty]
+        public int DealerID { get; set; } = 8;
 
-        public string CardIDs { get; private set; }
+        public string CardIDs { get; set; }
 
-        public IReadOnlyList<Card> Deck { get; private set; } = Array.Empty<Card>();
+        public IReadOnlyList<Card> Deck { get; set; } = Array.Empty<Card>();
 
-        public List<Card> ShuffledDeck { get; private set; } = new();
-                
+        public List<Card> ShuffledDeck { get; set; } = new();
+
+        public List<List<Card>> lPlayerHands = new();
+
         public IndexModel(ILogger<IndexModel> logger, DbHelper db)
         {
             _logger = logger;
@@ -49,8 +52,7 @@ namespace poker.net.Pages
             ShowTurnPanel = false;
             ShowRiverPanel = false;
             ShowTestPanel = false;
-            DealerID = 8;
-
+            
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -60,28 +62,15 @@ namespace poker.net.Pages
             switch (action)
             {
                 case "shuffle":
-                    ShowShufflePanel = true;
-                    ShowDealPanel = false;
-                    ShowFlopPanel = false;
-                    ShowTurnPanel = false;
-                    ShowRiverPanel = false;
-                    ShowTestPanel = false;
-
-                    DealerID += Convert.ToInt32(Request.Form["dealerid"]);
-                    DealerID += 1;
-                    if (DealerID > 9)
-                    {
-                        DealerID = 1;
-                    }
+                    DoShuffle();
+                    ModelState.Remove(nameof(DealerID));
                     break;
 
                 case "deal":
-                    DealerID += Convert.ToInt32(Request.Form["dealerid"]);
                     await DoDeal(); 
                     break;
 
                 case "flop":
-                    DealerID += Convert.ToInt32(Request.Form["dealerid"]);
                     await DoFlop();
                     break;
 
@@ -94,23 +83,58 @@ namespace poker.net.Pages
             return Page();
         }
 
+
+        private void DoShuffle()
+        {
+            ShowShufflePanel = true;
+            ShowDealPanel = false;
+            ShowFlopPanel = false;
+            ShowTurnPanel = false;
+            ShowRiverPanel = false;
+            ShowTestPanel = false;
+
+            DealerID = (DealerID % 9) + 1;
+            
+        }
+
+
+
         public async Task DoDeal()
         {
             Deck = await _db.RawDeckAsync();
             ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. Deck]);
             DeckHelper.Shuffle(ShuffledDeck);
-            
+
             CardIDs = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
+
+            // Use bound DealerID; no Request.Form
             await _db.RecordNewGameAsync(CardIDs, NetworkHelper.GetIPAddress(HttpContext));
 
+            // Deal the Cards
+            List<Card> lTemp;
+            for (Int32 i = 0; i < 9; i++)
+            {
+                lTemp = new List<Card>();
+                lTemp.Add(ShuffledDeck[i]);
+                lTemp.Add(ShuffledDeck[i + 9]);
+                for (Int32 x = 18; x < 23; x++)
+                    lTemp.Add(ShuffledDeck[x]);
+                lPlayerHands.Add(lTemp);
+            }
+
+            // show panels that follow a deal
             ShowTestPanel = true;
             ShowFlopPanel = true;
 
             _logger.LogInformation("DoDeal: Deck loaded & shuffled ({Count} cards).", ShuffledDeck.Count);
         }
+        
 
         public async Task DoFlop()
         {
+            //DealerID += Convert.ToInt32(Request.Form["dealerid"]);
+
+
             Deck = await _db.RawDeckAsync();
             ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. Deck]);
             DeckHelper.Shuffle(ShuffledDeck);
