@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using poker.net.Helper;
 using poker.net.Models;
 using poker.net.Services;
-using System;
-using System.Diagnostics;
-using System.Text;
 
 namespace poker.net.Pages
 {
@@ -14,6 +10,7 @@ namespace poker.net.Pages
     {
         #region Properties
         private readonly ILogger<IndexModel> _logger;
+        
         private readonly DbHelper _db;
 
         public Int32[] h { get; set; }
@@ -37,12 +34,10 @@ namespace poker.net.Pages
         public bool ShowTestPanel { get; set; }
 
         [BindProperty]
-        public int DealerID { get; set; } = 4;
+        public int DealerID { get; set; } = 8;
 
         [BindProperty]
         public string CardIDs { get; set; }
-
-        //public string sWinners { get; set; }
 
         public IReadOnlyList<Card> Deck { get; set; } = Array.Empty<Card>();
 
@@ -54,18 +49,9 @@ namespace poker.net.Pages
 
         public Int32 iWinValue { get; set; }
 
-
-
-        //public List<List<Card>> BestHands { get; set; } = new();   // 9 x 5
-        //public bool[] IsWinner { get; set; } = new bool[9];        // handles ties
-        //public string[] HandNames { get; set; } = new string[9];   // "Pair", "2 Pair", etc.
-        //public int[] BestHandIndex { get; set; } = new int[9];     // optional: for debugging
-
-
-
-
-
         #endregion
+
+        #region Contructor
 
         public IndexModel(ILogger<IndexModel> logger, DbHelper db)
         {
@@ -73,9 +59,12 @@ namespace poker.net.Pages
             _db = db;
         }
 
+        #endregion
+
+        #region Methods
+
         public void OnGet()
         {
-            // Show pnlDeal on GET, hide pnlTest
             ShowShufflePanel = true;
             ShowDealPanel = false;
             ShowFlopPanel = false;
@@ -83,7 +72,6 @@ namespace poker.net.Pages
             ShowRiverPanel = false;
             ShowWinnerPanel = false;
             ShowTestPanel = false;
-            
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -139,31 +127,16 @@ namespace poker.net.Pages
 
             CardIDs = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
 
-            // Use bound DealerID; no Request.Form
             await _db.RecordNewGameAsync(CardIDs, NetworkHelper.GetIPAddress(HttpContext));
 
-            // Get Players Hands
-            List<Card> lTemp;
-            for (Int32 i = 0; i < 9; i++)
-            {
-                lTemp = new List<Card>();
-                lTemp.Add(ShuffledDeck[i]);
-                lTemp.Add(ShuffledDeck[i + 9]);
-                for (Int32 x = 18; x < 23; x++)
-                    lTemp.Add(ShuffledDeck[x]);
-                lPlayerHands.Add(lTemp);
-            }
-
-            // show panels that follow a deal
             ShowTestPanel = true;
             ShowFlopPanel = true;
 
-            _logger.LogInformation("DoDeal: Deck loaded & shuffled ({Count} cards).", ShuffledDeck.Count);
+            _logger.LogInformation("DoDeal: Deck loaded, shuffled, and dealt");
         }
 
         public async Task DoFlop()
         {
-
             if (string.IsNullOrWhiteSpace(CardIDs))
             {
                 _logger.LogWarning("DoFlop: No CardIDs found in bound property.");
@@ -184,30 +157,18 @@ namespace poker.net.Pages
                 .Where(c => c != null)
                 .ToList()!;
 
-            // Get Players Hands
-            List<Card> lTemp;
-            for (Int32 i = 0; i < 9; i++)
-            {
-                lTemp = new List<Card>();
-                lTemp.Add(ShuffledDeck[i]);
-                lTemp.Add(ShuffledDeck[i + 9]);
-                for (Int32 x = 18; x < 23; x++)
-                    lTemp.Add(ShuffledDeck[x]);
-                lPlayerHands.Add(lTemp);
-            }
-
             ShowTestPanel = true;
             ShowFlopPanel = false;
             ShowTurnPanel = true;
 
-            _logger.LogInformation("DoFlop: Deck restored from hidden field ({Count} cards).", ShuffledDeck.Count);
+            _logger.LogInformation("DoFlop: Deck restored from hidden field");
         }
 
         public async Task DoTurn()
         {
             if (string.IsNullOrWhiteSpace(CardIDs))
             {
-                _logger.LogWarning("DoFlop: No CardIDs found in bound property.");
+                _logger.LogWarning("DoTurn: No CardIDs found in bound property.");
                 return;
             }
 
@@ -224,33 +185,27 @@ namespace poker.net.Pages
                 })
                 .Where(c => c != null)
                 .ToList()!;
-
-            // Get Players Hands
-            List<Card> lTemp;
-            for (Int32 i = 0; i < 9; i++)
-            {
-                lTemp = new List<Card>();
-                lTemp.Add(ShuffledDeck[i]);
-                lTemp.Add(ShuffledDeck[i + 9]);
-                for (Int32 x = 18; x < 23; x++)
-                    lTemp.Add(ShuffledDeck[x]);
-                lPlayerHands.Add(lTemp);
-            }
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
             ShowTurnPanel = false;
             ShowRiverPanel = true;
 
-            _logger.LogInformation("DoTurn: Deck restored from hidden field ({Count} cards).", ShuffledDeck.Count);
+            _logger.LogInformation("DoTurn: Deck restored from hidden field");
 
         }
 
         public async Task DoRiver()
         {
+            lPlayerHands.Clear();
+            lWinners.Clear();
+            h = new int[9];
+            r = new int[9];
+            iWinIndex = new int[9];
+
             if (string.IsNullOrWhiteSpace(CardIDs))
             {
-                _logger.LogWarning("DoFlop: No CardIDs found in bound property.");
+                _logger.LogWarning("DoRiver: No CardIDs found in bound property.");
                 return;
             }
 
@@ -264,42 +219,46 @@ namespace poker.net.Pages
                         return card;
                     return null;
                 })
-                .Where(c => c != null)
+                .Where(c => c is not null)!
                 .ToList()!;
 
-            // Get Players Hands
-            List<Card> lTemp;
-            for (Int32 i = 0; i < 9; i++)
+            if (ShuffledDeck.Count < 23)
             {
-                lTemp = new List<Card>();
-                lTemp.Add(ShuffledDeck[i]);
-                lTemp.Add(ShuffledDeck[i + 9]);
-                for (Int32 x = 18; x < 23; x++)
-                    lTemp.Add(ShuffledDeck[x]);
-                lPlayerHands.Add(lTemp);
+                _logger.LogWarning("DoRiver: ShuffledDeck has {Count} cards; expected at least 23.", ShuffledDeck.Count);
+                return;
             }
 
-            // The Index of the winnign hands from each players hand
+            for (int i = 0; i < 9; i++)
+            {
+                var hand = new List<Card>(7)
+                {
+                    ShuffledDeck[i],
+                    ShuffledDeck[i + 9]
+                };
+                for (int x = 18; x < 23; x++)
+                    hand.Add(ShuffledDeck[x]);
+
+                lPlayerHands.Add(hand);
+            }
+
+            // 1) For each 7-card hand, find best 5-card sub-hand index (0..20)
             iWinIndex = GetPlayersHandWinIndexes(lPlayerHands);
 
-            // Get Table Winner
-            h = new Int32[9];
-            r = new Int32[9];
-            for (Int32 i = 0; i < lPlayerHands.Count; i++)
+            // 2) Evaluate each player's best hand -> h (score), r (category)
+            for (int i = 0; i < lPlayerHands.Count; i++)
             {
-                h[i] = PokerLib.eval_5hand_fast_jb(GetSubHand(lPlayerHands[i], iWinIndex[i]));
+                var best5 = GetSubHand(lPlayerHands[i], iWinIndex[i]);
+                h[i] = PokerLib.eval_5hand_fast_jb(best5);
                 r[i] = PokerLib.hand_rank_jb(h[i]);
             }
 
-            //
-            //lWinners = new List<List<Card>>();
-            for (Int32 i = 0; i < lPlayerHands.Count; i++)
+            // 3) Extract and store the actual best 5-card hands (for display)
+            lWinners = new List<List<Card>>(capacity: 9);
+            for (int i = 0; i < lPlayerHands.Count; i++)
                 lWinners.Add(GetSubHand(lPlayerHands[i], iWinIndex[i]));
 
+            // 4) Lowest eval value wins (ties are possible)
             iWinValue = h.Min();
-
-
-            //
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -307,11 +266,12 @@ namespace poker.net.Pages
             ShowRiverPanel = false;
             ShowWinnerPanel = true;
 
-            _logger.LogInformation("DoRiver: Deck restored from hidden field ({Count} cards).", ShuffledDeck.Count);
-
+            _logger.LogInformation("DoRiver: Deck restored from hidden field");
         }
 
+        #endregion
 
+        #region Functions
 
         private Int32[] GetPlayersHandWinIndexes(List<List<Card>> l)
         {
@@ -340,91 +300,6 @@ namespace poker.net.Pages
                 lSubHand.Add(l[PokerLib.perm7[iIndex, j]]);
 
             return lSubHand;
-        }
-
-        private String GetRiverDisplay(List<List<Card>> l, Int32[] iWIndex)
-        {
-            // Get Only the Winning Hands of Each Player
-            List<List<Card>> lWinners = new List<List<Card>>();
-            for (Int32 i = 0; i < l.Count; i++)
-                lWinners.Add(GetSubHand(l[i], iWIndex[i]));
-
-            // Get the Winning Value of the Winning Hand. There maybe ties...!
-            Int32 iWinValue = h.Min();
-
-            // Loop the results into a string and return it.
-            StringBuilder objStr = new StringBuilder();
-            objStr.AppendLine("<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">");
-
-            objStr.AppendLine("  <tr>");
-            for (Int32 i = 0; i < lWinners.Count; i++)
-            {
-                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
-                    objStr.Append("    <th style=\"background-color: #bfb;\">");
-                else
-                    objStr.Append("    <th>");
-
-                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
-                    objStr.Append("WINNER!");
-                else
-                {
-                    objStr.Append("Player");
-                    objStr.Append(" ");
-                    objStr.Append((i + 1));
-                }
-
-                objStr.AppendLine("</th>");
-            }
-            objStr.AppendLine("  </tr>");
-
-            objStr.AppendLine("  <tr>");
-            for (Int32 i = 0; i < 9; i++)
-            {
-                objStr.Append("    <td align=\"center\">");
-                for (Int32 x = 0; x < lWinners[i].Count; x++)
-                {
-                    objStr.Append("<span style=\"color:#");
-                    objStr.Append(lWinners[PokerLib.DealOrder[DealerID, i]][x].Color);
-                    objStr.Append(";\">");
-                    objStr.Append(lWinners[PokerLib.DealOrder[DealerID, i]][x].Face);
-                    objStr.Append(lWinners[PokerLib.DealOrder[DealerID, i]][x].Suit);
-                    objStr.Append("</span>");
-                    if (x < lWinners[i].Count - 1)
-                        objStr.Append(" ");
-                }
-                objStr.AppendLine("</td>");
-            }
-            objStr.AppendLine("  </tr>");
-
-            objStr.AppendLine("  <tr>");
-            for (Int32 i = 0; i < 9; i++)
-            {
-                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
-                    objStr.Append("    <td align=\"center\" style=\"background-color: #bfb;\">");
-                else
-                    objStr.Append("    <td align=\"center\">");
-                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
-                    objStr.Append("<strong>");
-                if (h[PokerLib.DealOrder[DealerID, i]].Equals(1))
-                    objStr.Append("Royal Flush");
-                else
-                {
-                    if (!h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
-                        objStr.Append("<em>");
-                    objStr.Append(GetNameOfHand(r[PokerLib.DealOrder[DealerID, i]]));
-                    if (!h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
-                        objStr.Append("</em>");
-                }
-                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
-                    objStr.Append("</strong>");
-                objStr.AppendLine("</td>");
-            }
-            objStr.AppendLine("  </tr>");
-
-            objStr.AppendLine("</table>");
-
-            return objStr.ToString();
-
         }
 
         public string GetNameOfHand(int iRank)
@@ -462,6 +337,8 @@ namespace poker.net.Pages
             }
             return sReturn;
         }
+
+        #endregion
 
     }
 }

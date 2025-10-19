@@ -1,6 +1,6 @@
 using Microsoft.Data.SqlClient;
-using System.Data;
 using poker.net.Services;
+using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
