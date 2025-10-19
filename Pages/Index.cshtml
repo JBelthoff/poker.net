@@ -1,4 +1,5 @@
 ﻿@page
+@using poker.net.Services
 @model IndexModel
 @{
     ViewData["Title"] = "Poker Calculator | Texas Holdem | John Belthoff";
@@ -12,7 +13,7 @@
 
 @if (Model.ShowShufflePanel)
 {
-    <div class="container p-5">
+    <div class="container p-2">
         <h2>Texas Holdem</h2>
         <form method="post">
             <input type="hidden" asp-for="DealerID" />
@@ -24,7 +25,7 @@
 
 @if (Model.ShowFlopPanel)
 {
-    <div class="container p-5">
+    <div class="container p-2">
         <h2>Texas Holdem</h2>
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
@@ -83,7 +84,7 @@
 {
     
 
-    <div class="container p-5">
+    <div class="container p-2">
         <h2>Texas Holdem</h2>
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
@@ -143,7 +144,7 @@
 
 @if (Model.ShowRiverPanel)
 {
-    <div class="container p-5">
+    <div class="container p-2">
         <h2>Texas Holdem</h2>
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
@@ -204,7 +205,7 @@
 @if (Model.ShowWinnerPanel)
 {
 
-    <div class="container p-5">
+    <div class="container p-2">
         <h2>Texas Holdem</h2>
         <div class="table-responsive">
             <table class="table table-bordered table-striped text-center align-middle">
@@ -251,51 +252,63 @@
         </p>
     </div>
 
-
-
-
+    
     <h2 class="display-6 fw-semibold mb-3">Results:</h2>
     <div class="table-responsive">
         <table class="table table-bordered table-striped text-center align-middle">
             <thead class="table-dark">
                 <tr>
-                    <th>Player 1</th>
-                    <th>Player 2</th>
-                    <th>Player 3</th>
-                    <th>Player 4</th>
-                    <th class="table-success">WINNER!</th>
-                    <th>Player 6</th>
-                    <th>Player 7</th>
-                    <th>Player 8</th>
-                    <th>Player 9</th>
+                    @for (Int32 i = 0; i < Model.lWinners.Count; i++)
+                    {
+                    var isWinner = Model.h[PokerLib.DealOrder[Model.DealerID, i]].Equals(Model.iWinValue);
+                    <th class="@(isWinner ? "table-success" : "")">@(isWinner ? "WINNER!" : $"Player {i + 1}")</th>
+                    }
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td><span class="text-dark">8♣</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-danger">8♥</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-danger">J♥</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-dark">10♣</span> <span class="text-danger">A♦</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-danger">A♥</span> <span class="text-danger">K♦</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-dark">J♠</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-dark">10♠</span> <span class="text-dark">K♠</span> <span class="text-dark">8♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-dark">5♠</span> <span class="text-danger">5♦</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
-                    <td><span class="text-danger">J♦</span> <span class="text-danger">Q♥</span> <span class="text-dark">K♠</span> <span class="text-danger">K♥</span> <span class="text-dark">A♣</span></td>
+                    @for (int i = 0; i < 9; i++)
+                    {
+                        var seat = PokerLib.DealOrder[Model.DealerID, i];
+                        var cards = Model.lWinners[seat]; // List<Card>
+
+                        <td class="text-center text-nowrap">
+                            @for (int x = 0; x < cards.Count; x++)
+                            {
+                                var c = cards[x];
+                                @Html.Raw($"""<span style="color:#{c.Color};">{c.Face}{c.Suit}</span>""")
+                                if (x < cards.Count - 1)
+                                {
+                                    @Html.Raw(" ")
+                                }
+                            }
+                        </td>
+                    }
                 </tr>
                 <tr>
-                    <td><em>2 Pair</em></td>
-                    <td><em>2 Pair</em></td>
-                    <td><em>Pair</em></td>
-                    <td><em>2 Pair</em></td>
-                    <td class="table-success fw-bold">Full House</td>
-                    <td><em>Pair</em></td>
-                    <td><em>Pair</em></td>
-                    <td><em>2 Pair</em></td>
-                    <td><em>Pair</em></td>
+                    @for (int i = 0; i < 9; i++)
+                    {
+                        var seat = PokerLib.DealOrder[Model.DealerID, i];
+                        var isWinner = Model.h[seat] == Model.iWinValue;
+                        var isRoyal = Model.h[seat] == 1;
+                        var label = isRoyal ? "Royal Flush" : Model.GetNameOfHand(Model.r[seat]);
+
+                        <td class="text-center @(isWinner ? "table-success fw-bold" : "")">
+                            @if (isWinner)
+                            {
+                                @label
+                            }
+                            else
+                            {
+                                <em>@label</em>
+                            }
+                        </td>
+                    }
                 </tr>
             </tbody>
         </table>
     </div>
+
 
 
 

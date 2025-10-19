@@ -16,7 +16,11 @@ namespace poker.net.Pages
         private readonly ILogger<IndexModel> _logger;
         private readonly DbHelper _db;
 
-        public int[] h, r;
+        public Int32[] h { get; set; }
+
+        public Int32[] r { get; set; }
+
+        public Int32[] iWinIndex { get; set; }
 
         public bool ShowShufflePanel { get; set; }
 
@@ -33,16 +37,33 @@ namespace poker.net.Pages
         public bool ShowTestPanel { get; set; }
 
         [BindProperty]
-        public int DealerID { get; set; } = 8;
+        public int DealerID { get; set; } = 4;
 
         [BindProperty]
         public string CardIDs { get; set; }
+
+        //public string sWinners { get; set; }
 
         public IReadOnlyList<Card> Deck { get; set; } = Array.Empty<Card>();
 
         public List<Card> ShuffledDeck { get; set; } = new();
 
         public List<List<Card>> lPlayerHands = new();
+
+        public List<List<Card>> lWinners = new();
+
+        public Int32 iWinValue { get; set; }
+
+
+
+        //public List<List<Card>> BestHands { get; set; } = new();   // 9 x 5
+        //public bool[] IsWinner { get; set; } = new bool[9];        // handles ties
+        //public string[] HandNames { get; set; } = new string[9];   // "Pair", "2 Pair", etc.
+        //public int[] BestHandIndex { get; set; } = new int[9];     // optional: for debugging
+
+
+
+
 
         #endregion
 
@@ -92,10 +113,6 @@ namespace poker.net.Pages
                     await DoRiver();
                     break;
 
-                    // other actions
-                    // case "shuffle":
-                    //     await DoShuffle();
-                    //     break;
             }
 
             return Page();
@@ -239,7 +256,6 @@ namespace poker.net.Pages
 
             Deck = await _db.RawDeckAsync();
             var deckLookup = Deck.ToDictionary(c => c.ID);
-
             ShuffledDeck = CardIDs
                 .Split('|', StringSplitOptions.RemoveEmptyEntries)
                 .Select(idStr =>
@@ -264,7 +280,7 @@ namespace poker.net.Pages
             }
 
             // The Index of the winnign hands from each players hand
-            Int32[] iWinIndex = GetPlayersHandWinIndexes(lPlayerHands);
+            iWinIndex = GetPlayersHandWinIndexes(lPlayerHands);
 
             // Get Table Winner
             h = new Int32[9];
@@ -274,6 +290,16 @@ namespace poker.net.Pages
                 h[i] = PokerLib.eval_5hand_fast_jb(GetSubHand(lPlayerHands[i], iWinIndex[i]));
                 r[i] = PokerLib.hand_rank_jb(h[i]);
             }
+
+            //
+            //lWinners = new List<List<Card>>();
+            for (Int32 i = 0; i < lPlayerHands.Count; i++)
+                lWinners.Add(GetSubHand(lPlayerHands[i], iWinIndex[i]));
+
+            iWinValue = h.Min();
+
+
+            //
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -289,8 +315,7 @@ namespace poker.net.Pages
 
         private Int32[] GetPlayersHandWinIndexes(List<List<Card>> l)
         {
-            Trace.Write("GetPlayersHandWinIndexes()", "Started");
-            Int32[] iWinIndex = new Int32[l.Count];
+            iWinIndex = new Int32[l.Count];
             for (Int32 x = 0; x < l.Count; x++)
             {
                 UInt16[] iHandValues = new UInt16[21];
@@ -305,7 +330,6 @@ namespace poker.net.Pages
                 }
                 iWinIndex[x] = iHandValues.ToList().IndexOf(iHandValues.Min());
             }
-            Trace.Write("GetPlayersHandWinIndexes()", "Returning");
             return iWinIndex;
         }
 
@@ -316,6 +340,127 @@ namespace poker.net.Pages
                 lSubHand.Add(l[PokerLib.perm7[iIndex, j]]);
 
             return lSubHand;
+        }
+
+        private String GetRiverDisplay(List<List<Card>> l, Int32[] iWIndex)
+        {
+            // Get Only the Winning Hands of Each Player
+            List<List<Card>> lWinners = new List<List<Card>>();
+            for (Int32 i = 0; i < l.Count; i++)
+                lWinners.Add(GetSubHand(l[i], iWIndex[i]));
+
+            // Get the Winning Value of the Winning Hand. There maybe ties...!
+            Int32 iWinValue = h.Min();
+
+            // Loop the results into a string and return it.
+            StringBuilder objStr = new StringBuilder();
+            objStr.AppendLine("<table border=\"1\" cellpadding=\"4\" cellspacing=\"0\">");
+
+            objStr.AppendLine("  <tr>");
+            for (Int32 i = 0; i < lWinners.Count; i++)
+            {
+                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
+                    objStr.Append("    <th style=\"background-color: #bfb;\">");
+                else
+                    objStr.Append("    <th>");
+
+                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
+                    objStr.Append("WINNER!");
+                else
+                {
+                    objStr.Append("Player");
+                    objStr.Append(" ");
+                    objStr.Append((i + 1));
+                }
+
+                objStr.AppendLine("</th>");
+            }
+            objStr.AppendLine("  </tr>");
+
+            objStr.AppendLine("  <tr>");
+            for (Int32 i = 0; i < 9; i++)
+            {
+                objStr.Append("    <td align=\"center\">");
+                for (Int32 x = 0; x < lWinners[i].Count; x++)
+                {
+                    objStr.Append("<span style=\"color:#");
+                    objStr.Append(lWinners[PokerLib.DealOrder[DealerID, i]][x].Color);
+                    objStr.Append(";\">");
+                    objStr.Append(lWinners[PokerLib.DealOrder[DealerID, i]][x].Face);
+                    objStr.Append(lWinners[PokerLib.DealOrder[DealerID, i]][x].Suit);
+                    objStr.Append("</span>");
+                    if (x < lWinners[i].Count - 1)
+                        objStr.Append(" ");
+                }
+                objStr.AppendLine("</td>");
+            }
+            objStr.AppendLine("  </tr>");
+
+            objStr.AppendLine("  <tr>");
+            for (Int32 i = 0; i < 9; i++)
+            {
+                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
+                    objStr.Append("    <td align=\"center\" style=\"background-color: #bfb;\">");
+                else
+                    objStr.Append("    <td align=\"center\">");
+                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
+                    objStr.Append("<strong>");
+                if (h[PokerLib.DealOrder[DealerID, i]].Equals(1))
+                    objStr.Append("Royal Flush");
+                else
+                {
+                    if (!h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
+                        objStr.Append("<em>");
+                    objStr.Append(GetNameOfHand(r[PokerLib.DealOrder[DealerID, i]]));
+                    if (!h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
+                        objStr.Append("</em>");
+                }
+                if (h[PokerLib.DealOrder[DealerID, i]].Equals(iWinValue))
+                    objStr.Append("</strong>");
+                objStr.AppendLine("</td>");
+            }
+            objStr.AppendLine("  </tr>");
+
+            objStr.AppendLine("</table>");
+
+            return objStr.ToString();
+
+        }
+
+        public string GetNameOfHand(int iRank)
+        {
+            String sReturn = String.Empty;
+            switch (iRank)
+            {
+                case 1:
+                    sReturn = ("Straight Flush");
+                    break;
+                case 2:
+                    sReturn = ("4 of a Kind");
+                    break;
+                case 3:
+                    sReturn = ("Full House");
+                    break;
+                case 4:
+                    sReturn = ("Flush");
+                    break;
+                case 5:
+                    sReturn = ("Straight");
+                    break;
+                case 6:
+                    sReturn = ("3 of a Kind");
+                    break;
+                case 7:
+                    sReturn = ("2 Pair");
+                    break;
+                case 8:
+                    sReturn = ("Pair");
+                    break;
+                case 9:
+                    sReturn = ("High Card");
+                    break;
+            }
+            return sReturn;
         }
 
     }
