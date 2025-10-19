@@ -21,6 +21,7 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+x_dBase/
 LICENSE
 README.md
 !**/.gitignore
