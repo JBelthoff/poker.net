@@ -192,6 +192,7 @@ namespace poker.net.Pages
                 return;
             }
 
+            // 1) Get each 7-card hand per player
             for (int i = 0; i < 9; i++)
             {
                 var hand = new List<Card>(7)
@@ -205,11 +206,11 @@ namespace poker.net.Pages
                 lPlayerHands.Add(hand);
             }
 
-            // 1) For each 7-card hand, find best 5-card sub-hand index (0..20)
+            // 2) For each 7-card hand, find best 5-card sub-hand index (0..20)
             iWinIndex = GetPlayersHandWinIndexes(lPlayerHands);
 
-            // 2) Evaluate each player's best hand -> h (score), r (category)
-            // 3) Extract and store the actual best 5-card hands (for display): lWinners
+            // 3) Evaluate each player's best hand -> h (score), r (category)
+            // 4) Extract and store the actual best 5-card hands (for display): lWinners
             lWinners = new List<List<Card>>(capacity: 9);
             for (int i = 0; i < lPlayerHands.Count; i++)
             {
@@ -219,7 +220,7 @@ namespace poker.net.Pages
                 lWinners.Add(best5);
             }
 
-            // 4) Lowest eval value wins (ties are possible)
+            // 5) Lowest eval value wins (ties are possible)
             iWinValue = h.Min();
 
             ShowTestPanel = true;
