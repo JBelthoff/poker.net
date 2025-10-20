@@ -1,5 +1,4 @@
 # Poker Hand Evaluator (.NET Core Version)
-A modern ASP.NET Core (Razor Pages) web app that evaluates Texas Hold’em poker hands using Cactus Kev’s algorithm.
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-Developer-blue?logo=csharp)](https://learn.microsoft.com/en-us/dotnet/csharp/)
@@ -7,6 +6,10 @@ A modern ASP.NET Core (Razor Pages) web app that evaluates Texas Hold’em poker
 [![SQL Server](https://img.shields.io/badge/Database-SQL%20Server-red?logo=microsoftsqlserver)](https://learn.microsoft.com/en-us/sql/sql-server/)
 [![Docker](https://img.shields.io/badge/Containerized-Docker-blue?logo=docker)](https://www.docker.com/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+A modern **ASP.NET Core (Razor Pages)** web app that evaluates **Texas Hold’em poker hands** using **Cactus Kev’s algorithm**.
+
+---
 
 > ℹ️ **Looking for the earlier ASP.NET WebForms version?**  
 > You can find the legacy implementation here:  
@@ -16,6 +19,8 @@ A modern ASP.NET Core (Razor Pages) web app that evaluates Texas Hold’em poker
 
 A working version of this application is available at:  
 👉 [https://poker-calculator.johnbelthoff.com/](https://poker-calculator.johnbelthoff.com/)
+
+---
 
 ## About John Belthoff’s Texas Hold’em & Poker Hand Evaluator
 
@@ -48,5 +53,5 @@ If you have questions or suggestions, feel free to reach out — otherwise, enjo
 
 ---
 
-© 2025 John Belthoff  
+© 2025 **John Belthoff**  
 [www.johnbelthoff.com](https://www.johnbelthoff.com/)
