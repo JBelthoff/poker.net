@@ -201,7 +201,6 @@ namespace poker.net.Pages
             lWinners.Clear();
             h = new int[9];
             r = new int[9];
-            iWinIndex = new int[9];
 
             if (string.IsNullOrWhiteSpace(CardIDs))
             {
@@ -219,8 +218,8 @@ namespace poker.net.Pages
                         return card;
                     return null;
                 })
-                .Where(c => c is not null)!
-                .ToList()!;
+                .OfType<Card>() 
+                .ToList();
 
             if (ShuffledDeck.Count < 23)
             {
@@ -245,17 +244,15 @@ namespace poker.net.Pages
             iWinIndex = GetPlayersHandWinIndexes(lPlayerHands);
 
             // 2) Evaluate each player's best hand -> h (score), r (category)
+            // 3) Extract and store the actual best 5-card hands (for display): lWinners
+            lWinners = new List<List<Card>>(capacity: 9);
             for (int i = 0; i < lPlayerHands.Count; i++)
             {
                 var best5 = GetSubHand(lPlayerHands[i], iWinIndex[i]);
                 h[i] = PokerLib.eval_5hand_fast_jb(best5);
                 r[i] = PokerLib.hand_rank_jb(h[i]);
+                lWinners.Add(best5);
             }
-
-            // 3) Extract and store the actual best 5-card hands (for display)
-            lWinners = new List<List<Card>>(capacity: 9);
-            for (int i = 0; i < lPlayerHands.Count; i++)
-                lWinners.Add(GetSubHand(lPlayerHands[i], iWinIndex[i]));
 
             // 4) Lowest eval value wins (ties are possible)
             iWinValue = h.Min();
