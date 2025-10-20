@@ -1,4 +1,8 @@
-﻿# Poker Hand Evaluator
+> ℹ️ **Looking for the earlier ASP.NET WebForms version?**  
+> You can find the legacy implementation here:  
+> 👉 **[JBelthoff/poker.johnbelthoff.com](https://github.com/JBelthoff/poker.johnbelthoff.com)**
+
+ # Poker Hand Evaluator
 
 A working version of this application is now located at:  
 [https://poker-calculator.johnbelthoff.com/](https://poker-calculator.johnbelthoff.com/)
