@@ -39,8 +39,6 @@ namespace poker.net.Pages
         [BindProperty]
         public string CardIDs { get; set; }
 
-        public IReadOnlyList<Card> Deck { get; set; } = Array.Empty<Card>();
-
         public List<Card> ShuffledDeck { get; set; } = new();
 
         public List<List<Card>> lPlayerHands = new();
@@ -121,8 +119,7 @@ namespace poker.net.Pages
 
         public async Task DoDeal()
         {
-            Deck = await _db.RawDeckAsync();
-            ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. Deck]);
+            ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. await _db.RawDeckAsync()]);
             DeckHelper.Shuffle(ShuffledDeck);
 
             CardIDs = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
