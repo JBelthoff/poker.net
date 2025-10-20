@@ -143,19 +143,7 @@ namespace poker.net.Pages
                 return;
             }
 
-            Deck = await _db.RawDeckAsync();
-            var deckLookup = Deck.ToDictionary(c => c.ID);
-
-            ShuffledDeck = CardIDs
-                .Split('|', StringSplitOptions.RemoveEmptyEntries)
-                .Select(idStr =>
-                {
-                    if (int.TryParse(idStr, out int id) && deckLookup.TryGetValue(id, out var card))
-                        return card;
-                    return null;
-                })
-                .Where(c => c != null)
-                .ToList()!;
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), CardIDs);
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -172,19 +160,7 @@ namespace poker.net.Pages
                 return;
             }
 
-            Deck = await _db.RawDeckAsync();
-            var deckLookup = Deck.ToDictionary(c => c.ID);
-
-            ShuffledDeck = CardIDs
-                .Split('|', StringSplitOptions.RemoveEmptyEntries)
-                .Select(idStr =>
-                {
-                    if (int.TryParse(idStr, out int id) && deckLookup.TryGetValue(id, out var card))
-                        return card;
-                    return null;
-                })
-                .Where(c => c != null)
-                .ToList()!;
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), CardIDs);
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -208,19 +184,8 @@ namespace poker.net.Pages
                 return;
             }
 
-            Deck = await _db.RawDeckAsync();
-            var deckLookup = Deck.ToDictionary(c => c.ID);
-            ShuffledDeck = CardIDs
-                .Split('|', StringSplitOptions.RemoveEmptyEntries)
-                .Select(idStr =>
-                {
-                    if (int.TryParse(idStr, out int id) && deckLookup.TryGetValue(id, out var card))
-                        return card;
-                    return null;
-                })
-                .OfType<Card>() 
-                .ToList();
-
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), CardIDs);
+            
             if (ShuffledDeck.Count < 23)
             {
                 _logger.LogWarning("DoRiver: ShuffledDeck has {Count} cards; expected at least 23.", ShuffledDeck.Count);
@@ -269,6 +234,35 @@ namespace poker.net.Pages
         #endregion
 
         #region Functions
+
+        private static List<Card> GetShuffledDeck(IReadOnlyList<Card> deck, string cardIds)
+        {
+            if (deck is null)
+                throw new ArgumentNullException(nameof(deck));
+            if (string.IsNullOrWhiteSpace(cardIds))
+                throw new ArgumentException("CardIDs cannot be null or empty.", nameof(cardIds));
+
+            var deckLookup = deck.ToDictionary(c => c.ID);
+            var shuffled = new List<Card>(deck.Count);
+
+            foreach (var idStr in cardIds.Split('|', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (!int.TryParse(idStr, out int id) || !deckLookup.TryGetValue(id, out var card))
+                    throw new InvalidOperationException($"Invalid Card ID: {idStr}");
+
+                // Deep copy (since Card is mutable)
+                shuffled.Add(new Card
+                {
+                    ID = card.ID,
+                    Face = card.Face,
+                    Suit = card.Suit,
+                    Color = card.Color,
+                    Value = card.Value
+                });
+            }
+
+            return shuffled;
+        }
 
         private Int32[] GetPlayersHandWinIndexes(List<List<Card>> l)
         {
