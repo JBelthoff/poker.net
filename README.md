@@ -74,6 +74,14 @@ Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** —
 
 ---
 
+### 📁 Benchmark Files
+
+Benchmark source files are located here:
+- `x_Benchmark/FinalRiverBench.cs`
+- `x_Benchmark/Program.cs`
+
+---
+
 ## Local Setup
 
 1. Create a **SQL Server** database named `PokerApp`.

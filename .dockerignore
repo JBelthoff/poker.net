@@ -22,6 +22,7 @@
 **/secrets.dev.yaml
 **/values.dev.yaml
 x_dBase/
+x_Benchmark
 LICENSE
 README.md
 !**/.gitignore
