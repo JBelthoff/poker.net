@@ -1,11 +1,17 @@
 # Poker Hand Evaluator (.NET Core Version)
+> High-performance .NET 8 poker hand evaluator and calculator built with ASP.NET Core Razor Pages.
+
+
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://poker-calculator.johnbelthoff.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-Developer-blue?logo=csharp)](https://learn.microsoft.com/en-us/dotnet/csharp/)
 [![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Razor%20Pages-5C2D91?logo=dotnet)](https://learn.microsoft.com/en-us/aspnet/core/?view=aspnetcore-8.0)
 [![SQL Server](https://img.shields.io/badge/Database-SQL%20Server-red?logo=microsoftsqlserver)](https://learn.microsoft.com/en-us/sql/sql-server/)
 [![Docker](https://img.shields.io/badge/Containerized-Docker-blue?logo=docker)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
 
 A modern **ASP.NET Core (Razor Pages)** web app that evaluates **Texas Hold’em poker hands** using **Cactus Kev’s algorithm**, re-engineered for **.NET 8 performance**.
 
@@ -40,7 +46,9 @@ Future updates will continue refining gameplay and add more interactive features
 
 ---
 
-## ⚡ Performance Optimized
+## ⚡ Performance
+
+### Summary
 
 Poker.net’s new `EvalEngine` was built from the ground up for **speed, minimal allocation, and clear architecture**.  
 Benchmarks were run using **BenchmarkDotNet v0.15.4** on **.NET 8.0.21**, Windows 10 (22H2), and an **Intel Core i9-9940X** CPU.
@@ -49,11 +57,25 @@ Each full 9-player river evaluation involves **189 five-card combinations** (9 p
 
 | Method | Mean (µs/op) | Alloc/op | Derived 5-card evals/sec* |
 |:----------------------------------------------|--------------:|----------:|--------------------------:|
-| **End-to-End (9 players • best-of-7)** | 9.435 | 6.1 KB | ≈ **20 million/sec** |
-| **Engine-only (7-card → best-of-21)** | 1.643 | 0.9 KB | ≈ **115 million 5-card evals/sec** |
+| **End-to-End (9 players • best-of-7)** | 9.574 | 6.2 KB | ≈ **20 million/sec** |
+| **Engine-only (7-card → best-of-21)** | 1.645 | 0.9 KB | ≈ **115 million/sec** |
 
-\* Derived = 189 ÷ mean seconds, where each 7-card hand is evaluated by testing all 21 possible 5-card combinations to find the best hand.  
+\*Derived = 189 ÷ mean seconds, where each 7-card hand is evaluated by testing all 21 possible 5-card combinations.  
 This expresses throughput in the same unit (5-card evaluations per second) used by other poker evaluators.
+
+---
+
+### Raw Benchmark Output
+
+| Method                                              | Mean      | Throughput      | Allocated |
+|----------------------------------------------------|----------:|----------------:|----------:|
+| Engine-only: 9 × (7-card → best-of-21)             | 1.645 µs  | ~607,903 ops/s  | ~888 B  |
+| End-to-End: 9 players (best-of-7) winner (EvalEngine) | 9.574 µs  | ~104,450 ops/s  | ~6,208 B  |
+
+- **Confidence interval (99.9%)** – Engine-only [1.643 ; 1.648] µs, End-to-End [9.549 ; 9.598] µs  
+- A full 9-player river involves **189 five-card evaluations**; derived throughput ≈ **115 M** (engine-only) and **~20 M** (E2E) 5-card evals/sec.
+
+
 
 ---
 
