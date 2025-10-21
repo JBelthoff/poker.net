@@ -214,9 +214,10 @@ namespace poker.net.Pages
             for (int i = 0; i < lPlayerHands.Count; i++)
             {
                 var best5 = GetSubHand(lPlayerHands[i], iWinIndex[i]);
-                h[i] = PokerLib.eval_5hand_fast_jb(best5);
+                var best5Sorted = SortHand(best5);
+                h[i] = PokerLib.eval_5hand_fast_jb(best5Sorted);
                 r[i] = PokerLib.hand_rank_jb(h[i]);
-                lWinners.Add(best5);
+                lWinners.Add(best5Sorted);
             }
 
             // 5) Lowest eval value wins (ties are possible)
@@ -327,6 +328,14 @@ namespace poker.net.Pages
                     break;
             }
             return sReturn;
+        }
+
+        private static List<Card> SortHand(IEnumerable<Card> hand)
+        {
+            return hand
+                .OrderBy(c => c.Value)
+                .ThenBy(c => c.Face) 
+                .ToList();
         }
 
         #endregion
