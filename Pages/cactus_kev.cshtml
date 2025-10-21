@@ -5,9 +5,17 @@
     ViewData["Description"] = "Explore the original algorithm behind Cactus Kev’s Poker Hand Evaluator - a deep dive into hand-value logic and how it powers this C# port demo.";
     ViewData["Canonical"] = "https://poker-calculator.johnbelthoff.com/cactus_kev";
 }
+
+<!--
+Original article by Kevin Suffecool (Cactus Kev)
+Reproduced here for educational and historical reference.
+All rights belong to the original author.
+This page is not affiliated with or endorsed by Kevin Suffecool.
+-->
+
 <div class="container p-5">
     <h1 class="display-4 text-center mb-5">Cactus Kev's Poker Hand Evaluator</h1>
-    <p><span class="text-danger"><strong>PLEASE TAKE NOTICE</strong> This article is recreated from the original which was located here: <a href="http://www.suffecool.net/poker/evaluator.html" target="_blank">Cactus Kev's Poker Hand Evaluator</a>. Cactus Kev is obviously a Master while I am merely a budding student. I've included it here for convinience only.</span></p>
+    <p><span class="text-danger"><strong>PLEASE TAKE NOTICE</strong> This article is recreated from the original which was located here: <a href="http://www.suffecool.net/poker/evaluator.html" rel="noopener noreferrer" target="_blank">Cactus Kev's Poker Hand Evaluator</a>. Cactus Kev is obviously a Master while I am merely a budding student. I've included it here for convinience only.</span></p>
     <p><a href="/about">Back to About</a></p>
     <p>A while ago, I decided to take a shot at writing a poker hand evaluator in the programming language "C". There are already numerous evaluators out there, but I had an idea for an algorithm that might be faster than anything already out there. The basic concept is to write a routine that would take a five card poker hand and return its overall "value". This is extremely valuable in any poker-related software, since the code will constantly be comparing various players' hands with each other to determine the "winner". Here is my concept on how I thought I could write a fast evaluator.</p>
     <hr class="w-75 mx-auto my-4">
