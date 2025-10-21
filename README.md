@@ -40,9 +40,9 @@ Future updates will continue refining gameplay and add more interactive features
 
 ---
 
-## ⚡ Performance
+## ⚡ Performance Optimized
 
-Poker.net’s new `EvalEngine` was built from the ground up for speed and clarity.  
+Poker.net’s new `EvalEngine` was built from the ground up for **speed, minimal allocation, and clear architecture**.  
 Benchmarks were run using **BenchmarkDotNet v0.15.4** on **.NET 8.0.21**, Windows 10 (22H2), and an **Intel Core i9-9940X** CPU.
 
 Each full 9-player river evaluation involves **189 five-card combinations** (9 players × 21 combos each).
@@ -55,16 +55,20 @@ Each full 9-player river evaluation involves **189 five-card combinations** (9 p
 \* Derived = 189 ÷ mean seconds, where each 7-card hand is evaluated by testing all 21 possible 5-card combinations to find the best hand.  
 This expresses throughput in the same unit (5-card evaluations per second) used by other poker evaluators.
 
+---
+
 ### 📊 How It Compares
 
 | Evaluator | Type | Cards / Eval | Reported Speed (C#) | Memory Usage | Notes |
 |------------|------|--------------|--------------------:|--------------:|-------|
 | **Poker.net (EvalEngine)** | Algorithmic (computed) | 5-card | **≈ 20 M evals/sec** | ~6 KB/op | Pure .NET 8, no lookup tables |
-| **SnapCall** | Lookup table | 7-card (precomputed) | **≈ 7.5 M lookups/sec** | ~2 GB | Constant-time lookups |
-| **Cactus Kev (C)** | Algorithmic | 5-card | 10–20 M evals/sec | negligible | Native C version |
+| **SnapCall** ([platatat/SnapCall](https://github.com/platatat/SnapCall)) | Lookup table | 7-card (precomputed) | **≈ 7.5 M lookups/sec** | ~2 GB | Constant-time lookups |
+| **HenryRLee/PokerHandEvaluator** | Lookup table (C++) | 7-card | ≈ 10–15 M/sec | ~2 GB | Perfect-hash table |
+| **OMPEval** (C++) | Algorithmic | 7-card | ≈ 35–40 M/sec | Low | Optimized native code |
+| **Cactus Kev (C)** | Algorithmic | 5-card | 10–20 M/sec | negligible | Original native C version |
 
-Unlike SnapCall’s 7-card table (which requires ~2 GB of precomputed data loaded into memory),  
-**Poker.net computes results dynamically** — yet still surpasses those lookup-table speeds while using virtually no extra memory.
+Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** — which load multi-gigabyte precomputed data into memory —  
+**Poker.net computes results dynamically** in real time, yet still meets or surpasses many lookup-based speeds while using almost no memory.
 
 > 🔥 In other words: *The engine evaluates a full 7-card hand (selecting the best 5-card combination) approximately **115 million times per second** in pure C# — no table lookups, no unsafe code, no native dependencies.*
 
@@ -74,7 +78,7 @@ Unlike SnapCall’s 7-card table (which requires ~2 GB of precomputed data loade
 
 1. Create a **SQL Server** database named `PokerApp`.
 2. Create a **Login** and **User** for the database.
-3. Run the script **`CreateDB.sql`** (in the `x_dBase` directory) against the `PokerApp` database.
+3. Run the script **`CreateDB.sql`** (in the `x_dBase` directory) against `PokerApp`.
 4. Update your connection string (via `appsettings.json`, User Secrets, or environment variables).
 5. Build and run the project (`dotnet run`, Docker, or IIS Express).
 6. Visit the app in your browser and start playing!
