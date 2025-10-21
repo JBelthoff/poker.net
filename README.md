@@ -67,8 +67,7 @@ This expresses throughput in the same unit (5-card evaluations per second) used 
 | **OMPEval** (C++) | Algorithmic | 7-card | ≈ 35–40 M/sec | Low | Optimized native code |
 | **Cactus Kev (C)** | Algorithmic | 5-card | 10–20 M/sec | negligible | Original native C version |
 
-Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** — which load multi-gigabyte precomputed data into memory —  
-**Poker.net computes results dynamically** in real time, yet still meets or surpasses many lookup-based speeds while using almost no memory.
+Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** — which load multi-gigabyte precomputed data into memory —  **Poker.net computes results dynamically** in real time, yet still meets or surpasses many lookup-based speeds while using almost no memory.
 
 > 🔥 In other words: *The engine evaluates a full 7-card hand (selecting the best 5-card combination) approximately **115 million times per second** in pure C# — no table lookups, no unsafe code, no native dependencies.*
 
