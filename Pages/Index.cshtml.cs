@@ -44,6 +44,8 @@ namespace poker.net.Pages
 
         public Int32 iWinValue { get; set; }
 
+        private readonly List<Card> _tmp5 = new() { default!, default!, default!, default!, default! };
+
         #endregion
 
         #region Contructor
@@ -172,6 +174,7 @@ namespace poker.net.Pages
 
         public async Task DoRiver()
         {
+            // reset UI state + arrays
             lPlayerHands.Clear();
             lWinners.Clear();
             h = new int[9];
@@ -183,54 +186,41 @@ namespace poker.net.Pages
                 return;
             }
 
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
-            
+            // 1) Rebuild shuffled deck from hidden field
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds); // existing helper:contentReference[oaicite:3]{index=3}
+
             if (ShuffledDeck.Count < 23)
             {
                 _logger.LogWarning("DoRiver: ShuffledDeck has {Count} cards; expected at least 23.", ShuffledDeck.Count);
                 return;
             }
 
-            // 1) Get each 7-card hand per player
+            // 2) Evaluate all nine players via the new engine
+            var (scores, ranks, bestIdx, best5sSorted) = EvalEngine.EvaluateRiverNinePlayers(ShuffledDeck);
+
+            // 3) Push results into your existing fields (for the view)
             for (int i = 0; i < 9; i++)
             {
-                var hand = new List<Card>(7)
-                {
-                    ShuffledDeck[i],
-                    ShuffledDeck[i + 9]
-                };
-                for (int x = 18; x < 23; x++)
-                    hand.Add(ShuffledDeck[x]);
-
-                lPlayerHands.Add(hand);
+                h[i] = scores[i];
+                r[i] = ranks[i];
             }
+            iWinIndex = bestIdx;
+            lWinners = best5sSorted;
 
-            // 2) For each 7-card hand, find best 5-card sub-hand index (0..20)
-            iWinIndex = GetPlayersHandWinIndexes(lPlayerHands);
+            // 4) Determine winners (support ties)
+            var minVal = scores.Min();
+            iWinValue = minVal;
 
-            // 3) Evaluate each player's best hand -> h (score), r (category)
-            // 4) Extract and store the actual best 5-card hands (for display): lWinners
-            lWinners = new List<List<Card>>(capacity: 9);
-            for (int i = 0; i < lPlayerHands.Count; i++)
-            {
-                var best5 = GetSubHand(lPlayerHands[i], iWinIndex[i]);
-                var best5Sorted = SortHand(best5);
-                h[i] = PokerLib.eval_5hand_fast_jb(best5Sorted);
-                r[i] = PokerLib.hand_rank_jb(h[i]);
-                lWinners.Add(best5Sorted);
-            }
-
-            // 5) Lowest eval value wins (ties are possible)
-            iWinValue = h.Min();
-
+            // 5) Panel visibility (consistent with your flow)
             ShowTestPanel = true;
             ShowFlopPanel = false;
             ShowTurnPanel = false;
             ShowRiverPanel = false;
             ShowWinnerPanel = true;
 
-            _logger.LogInformation("DoRiver: Deck restored from hidden field");
+            _logger.LogInformation("DoRiver: Evaluated winners using EvalEngine.");
         }
+
 
         #endregion
 
@@ -283,6 +273,37 @@ namespace poker.net.Pages
                 iWinIndex[x] = iHandValues.ToList().IndexOf(iHandValues.Min());
             }
             return iWinIndex;
+        }
+
+        private static int[] GetPlayersHandWinIndexes_NoAllocs(List<List<Card>> players7, int[] scratchIdx, List<Card> tmp5)
+        {
+            if (scratchIdx == null || scratchIdx.Length != players7.Count)
+                scratchIdx = new int[players7.Count];
+
+            for (int p = 0; p < players7.Count; p++)
+            {
+                var seven = players7[p];
+
+                ushort best = ushort.MaxValue;
+                int bestRow = 0;
+
+                // Sweep the 21 combinations using perm7; reuse tmp5 and just repoint elements.
+                for (int row = 0; row < 21; row++)
+                {
+                    tmp5[0] = seven[PokerLib.perm7[row, 0]];
+                    tmp5[1] = seven[PokerLib.perm7[row, 1]];
+                    tmp5[2] = seven[PokerLib.perm7[row, 2]];
+                    tmp5[3] = seven[PokerLib.perm7[row, 3]];
+                    tmp5[4] = seven[PokerLib.perm7[row, 4]];
+
+                    var v = PokerLib.eval_5hand_fast_jb(tmp5);
+                    if (v < best) { best = v; bestRow = row; }
+                }
+
+                scratchIdx[p] = bestRow;
+            }
+
+            return scratchIdx;
         }
 
         private List<Card> GetSubHand(List<Card> l, Int32 iIndex)

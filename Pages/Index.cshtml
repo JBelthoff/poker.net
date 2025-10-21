@@ -285,7 +285,7 @@
                     {
                         var seat = seats[col];
                         var isWinner = Model.h[seat] == Model.iWinValue;
-                        var isRoyal = Model.h[seat] == 1; // if you use this shortcut
+                        var isRoyal = (Model.r[seat] == 1) && (Model.h[seat] == 1); // Straight-flush bucket AND best eval
                         var label = isRoyal ? "Royal Flush" : Model.GetNameOfHand(Model.r[seat]);
 
                         <td class="text-center @(isWinner ? "table-success fw-bold" : "")">
