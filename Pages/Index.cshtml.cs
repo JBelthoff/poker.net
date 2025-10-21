@@ -34,10 +34,7 @@ namespace poker.net.Pages
         public bool ShowTestPanel { get; set; }
 
         [BindProperty]
-        public int DealerID { get; set; } = 8;
-
-        [BindProperty]
-        public string CardIDs { get; set; }
+        public Game Game { get; set; } = new();
 
         public List<Card> ShuffledDeck { get; set; } = new();
 
@@ -63,6 +60,9 @@ namespace poker.net.Pages
 
         public void OnGet()
         {
+            if (Game == null) Game = new Game();
+            if (Game.DealerID == 0) Game.DealerID = 8;
+
             ShowShufflePanel = true;
             ShowDealPanel = false;
             ShowFlopPanel = false;
@@ -70,6 +70,7 @@ namespace poker.net.Pages
             ShowRiverPanel = false;
             ShowWinnerPanel = false;
             ShowTestPanel = false;
+
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -80,7 +81,6 @@ namespace poker.net.Pages
             {
                 case "shuffle":
                     DoShuffle();
-                    ModelState.Remove(nameof(DealerID));
                     break;
 
                 case "deal":
@@ -113,8 +113,9 @@ namespace poker.net.Pages
             ShowRiverPanel = false;
             ShowTestPanel = false;
 
-            DealerID = (DealerID % 9) + 1;
-            
+            Game.DealerID = (Game.DealerID % 9) + 1;
+            ModelState.Clear();
+
         }
 
         public async Task DoDeal()
@@ -122,9 +123,10 @@ namespace poker.net.Pages
             ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. await _db.RawDeckAsync()]);
             DeckHelper.Shuffle(ShuffledDeck);
 
-            CardIDs = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
+            Game.CardIds = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
+            Game = await _db.RecordNewGameAsync(Game, NetworkHelper.GetIPAddress(HttpContext));
 
-            await _db.RecordNewGameAsync(CardIDs, NetworkHelper.GetIPAddress(HttpContext));
+            ModelState.Clear();
 
             ShowTestPanel = true;
             ShowFlopPanel = true;
@@ -134,13 +136,13 @@ namespace poker.net.Pages
 
         public async Task DoFlop()
         {
-            if (string.IsNullOrWhiteSpace(CardIDs))
+            if (string.IsNullOrWhiteSpace(Game.CardIds))
             {
                 _logger.LogWarning("DoFlop: No CardIDs found in bound property.");
                 return;
             }
 
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), CardIDs);
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -151,13 +153,13 @@ namespace poker.net.Pages
 
         public async Task DoTurn()
         {
-            if (string.IsNullOrWhiteSpace(CardIDs))
+            if (string.IsNullOrWhiteSpace(Game.CardIds))
             {
                 _logger.LogWarning("DoTurn: No CardIDs found in bound property.");
                 return;
             }
 
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), CardIDs);
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -175,13 +177,13 @@ namespace poker.net.Pages
             h = new int[9];
             r = new int[9];
 
-            if (string.IsNullOrWhiteSpace(CardIDs))
+            if (string.IsNullOrWhiteSpace(Game.CardIds))
             {
                 _logger.LogWarning("DoRiver: No CardIDs found in bound property.");
                 return;
             }
 
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), CardIDs);
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
             
             if (ShuffledDeck.Count < 23)
             {

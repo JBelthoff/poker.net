@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace poker.net.Models
+﻿namespace poker.net.Models
 {
     public class Game
     {

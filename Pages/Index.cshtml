@@ -16,7 +16,9 @@
     <div class="container p-2">
         <h2>Texas Holdem</h2>
         <form method="post">
-            <input type="hidden" asp-for="DealerID" />
+            <input type="hidden" asp-for="Game.GameID" />
+            <input type="hidden" asp-for="Game.CardIds" />
+            <input type="hidden" asp-for="Game.DealerID" />
             @Html.AntiForgeryToken()
             <button type="submit" name="action" value="deal" class="btn btn-dark">Deal</button>
         </form>
@@ -33,7 +35,7 @@
                     <tr>
                         @for (int i = 0; i < 9; i++)
                         {
-                            var isDealer = (i + 1) == Model.DealerID;
+                            var isDealer = (i + 1) == Model.Game.DealerID;
                             <th class="@(isDealer ? "table-info" : "")">@(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")</th>
                         }
                     </tr>
@@ -41,7 +43,7 @@
                 <tbody>
                     <tr>
                     @{
-                        int startSeat = (Model.DealerID % 9) + 1;
+                        int startSeat = (Model.Game.DealerID % 9) + 1;
                     }
                     @for (int i = 0; i < 9; i++)
                     {
@@ -64,8 +66,9 @@
     </div>
 
     <form method="post">
-        <input type="hidden" asp-for="DealerID" />
-        <input type="hidden" asp-for="CardIDs" />
+        <input type="hidden" asp-for="Game.GameID" />
+        <input type="hidden" asp-for="Game.CardIds" />
+        <input type="hidden" asp-for="Game.DealerID" />
         @Html.AntiForgeryToken()
         <button type="submit" name="action" value="flop" class="btn btn-dark">Deal Flop</button>
         <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
@@ -83,7 +86,7 @@
                     <tr>
                         @for (int i = 0; i < 9; i++)
                         {
-                            var isDealer = (i + 1) == Model.DealerID;
+                            var isDealer = (i + 1) == Model.Game.DealerID;
                             <th class="@(isDealer ? "table-info" : "")">@(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")</th>
                         }
                     </tr>
@@ -91,7 +94,7 @@
                 <tbody>
                     <tr>
                         @{
-                            int startSeat = (Model.DealerID % 9) + 1;
+                            int startSeat = (Model.Game.DealerID % 9) + 1;
                         }
                         @for (int i = 0; i < 9; i++)
                         {
@@ -118,8 +121,9 @@
     </div>
 
     <form method="post">
-        <input type="hidden" asp-for="DealerID" />
-        <input type="hidden" asp-for="CardIDs" />
+        <input type="hidden" asp-for="Game.GameID" />
+        <input type="hidden" asp-for="Game.CardIds" />
+        <input type="hidden" asp-for="Game.DealerID" />
         @Html.AntiForgeryToken()
         <button type="submit" name="action" value="turn" class="btn btn-dark">Deal Turn</button>
         <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
@@ -138,7 +142,7 @@
                     <tr>
                         @for (int i = 0; i < 9; i++)
                         {
-                            var isDealer = (i + 1) == Model.DealerID;
+                            var isDealer = (i + 1) == Model.Game.DealerID;
                             <th class="@(isDealer ? "table-info" : "")">@(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")</th>
                         }
                     </tr>
@@ -146,7 +150,7 @@
                 <tbody>
                     <tr>
                         @{
-                            int startSeat = (Model.DealerID % 9) + 1;
+                            int startSeat = (Model.Game.DealerID % 9) + 1;
                         }
                         @for (int i = 0; i < 9; i++)
                         {
@@ -175,8 +179,9 @@
     </div>
 
     <form method="post">
-        <input type="hidden" asp-for="DealerID" />
-        <input type="hidden" asp-for="CardIDs" />
+        <input type="hidden" asp-for="Game.GameID" />
+        <input type="hidden" asp-for="Game.CardIds" />
+        <input type="hidden" asp-for="Game.DealerID" />
         @Html.AntiForgeryToken()
         <button type="submit" name="action" value="river" class="btn btn-dark">Deal River</button>
         <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
@@ -197,7 +202,7 @@
                     <tr>
                         @for (int i = 0; i < 9; i++)
                         {
-                            var isDealer = (i + 1) == Model.DealerID;
+                            var isDealer = (i + 1) == Model.Game.DealerID;
                             <th class="@(isDealer ? "table-info" : "")">@(isDealer ? $"Dealer {i + 1}" : $"Player {i + 1}")</th>
                         }
                     </tr>
@@ -205,7 +210,7 @@
                 <tbody>
                     <tr>
                         @{
-                            int startSeat = (Model.DealerID % 9) + 1;
+                            int startSeat = (Model.Game.DealerID % 9) + 1;
                         }
                         @for (int i = 0; i < 9; i++)
                         {
@@ -236,8 +241,7 @@
 
 
     @{
-        // Map columns to seats using your current dealer-relative order
-        var dealerRow = Model.DealerID - 1; // DealerID is 1-based; DealOrder row is 0-based
+        var dealerRow = Model.Game.DealerID - 1;
         var seats = new int[9];
         for (int i = 0; i < 9; i++)
             seats[i] = PokerLib.DealOrder[dealerRow, i];
@@ -313,8 +317,9 @@
 
 
     <form method="post">
-        <input type="hidden" asp-for="DealerID" />
-        <input type="hidden" asp-for="CardIDs" />
+        <input type="hidden" asp-for="Game.GameID" />
+        <input type="hidden" asp-for="Game.CardIds" />
+        <input type="hidden" asp-for="Game.DealerID" />
         @Html.AntiForgeryToken()
         <button type="submit" name="action" value="shuffle" class="btn btn-dark">Shuffle</button>
     </form>

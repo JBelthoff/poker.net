@@ -66,14 +66,17 @@ namespace poker.net.Services
         /// <summary>
         /// Inserts a new game record into the database and returns its GameID.
         /// </summary>
-        public async Task<Guid> RecordNewGameAsync(string array, string ip, CancellationToken ct = default)
+        public async Task<Game> RecordNewGameAsync(Game game, string ip, CancellationToken ct = default)
         {
             _logger.LogDebug("DbHelper.RecordNewGameAsync: Start");
+
+            if (game is null)
+                throw new ArgumentNullException(nameof(game));
 
             var parameters = new DynamicParameters();
             parameters.Add("@Return", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
             parameters.Add("@CreateIP", ip, DbType.String, size: 100, direction: ParameterDirection.Input);
-            parameters.Add("@Array", array, DbType.String, size: 8000, direction: ParameterDirection.Input);
+            parameters.Add("@Array", game.CardIds, DbType.String, size: 8000, direction: ParameterDirection.Input);
             parameters.Add("@GameID", dbType: DbType.Guid, direction: ParameterDirection.Output);
 
             if (_db.State != ConnectionState.Open)
@@ -87,9 +90,13 @@ namespace poker.net.Services
                     commandType: CommandType.StoredProcedure
                 );
 
-                var gameId = parameters.Get<Guid>("@GameID");
-                _logger.LogInformation("DbHelper.RecordNewGameAsync: New game recorded with ID {GameId}", gameId);
-                return gameId;
+                game.GameID = parameters.Get<Guid>("@GameID");
+                _logger.LogInformation(
+                    "DbHelper.RecordNewGameAsync: New game recorded with ID {GameId} (Dealer {DealerID})",
+                    game.GameID, game.DealerID
+                );
+
+                return game;
             }
             finally
             {
