@@ -122,11 +122,22 @@ namespace poker.net.Pages
 
         public async Task DoDeal()
         {
-            ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. await _db.RawDeckAsync()]);
-            DeckHelper.Shuffle(ShuffledDeck);
+            var bTest = false;
+            var SelectedWin = 12; // See GetFixedDeck() for values
 
-            Game.CardIds = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
-            Game = await _db.RecordNewGameAsync(Game, NetworkHelper.GetIPAddress(HttpContext));
+            if (!bTest)
+            {
+                ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. await _db.RawDeckAsync()]);
+                DeckHelper.Shuffle(ShuffledDeck);
+
+                Game.CardIds = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
+                Game = await _db.RecordNewGameAsync(Game, NetworkHelper.GetIPAddress(HttpContext));
+            }
+            else
+            {
+                Game.CardIds = GetFixedDeck(SelectedWin);
+                ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
+            }
 
             ModelState.Clear();
 
@@ -187,7 +198,7 @@ namespace poker.net.Pages
             }
 
             // 1) Rebuild shuffled deck from hidden field
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds); // existing helper:contentReference[oaicite:3]{index=3}
+            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
 
             if (ShuffledDeck.Count < 23)
             {
@@ -195,23 +206,20 @@ namespace poker.net.Pages
                 return;
             }
 
-            // 2) Evaluate all nine players via the new engine
+            // 2) Evaluate all nine players via the new EvalEngine
             var (scores, ranks, bestIdx, best5sSorted) = EvalEngine.EvaluateRiverNinePlayers(ShuffledDeck);
 
-            // 3) Push results into your existing fields (for the view)
+            // 3) Push results into existing fields (for the view)
             for (int i = 0; i < 9; i++)
             {
                 h[i] = scores[i];
                 r[i] = ranks[i];
             }
+
             iWinIndex = bestIdx;
             lWinners = best5sSorted;
+            iWinValue = scores.Min(); 
 
-            // 4) Determine winners (support ties)
-            var minVal = scores.Min();
-            iWinValue = minVal;
-
-            // 5) Panel visibility (consistent with your flow)
             ShowTestPanel = true;
             ShowFlopPanel = false;
             ShowTurnPanel = false;
@@ -220,7 +228,6 @@ namespace poker.net.Pages
 
             _logger.LogInformation("DoRiver: Evaluated winners using EvalEngine.");
         }
-
 
         #endregion
 
@@ -253,66 +260,6 @@ namespace poker.net.Pages
             }
 
             return shuffled;
-        }
-
-        private Int32[] GetPlayersHandWinIndexes(List<List<Card>> l)
-        {
-            iWinIndex = new Int32[l.Count];
-            for (Int32 x = 0; x < l.Count; x++)
-            {
-                UInt16[] iHandValues = new UInt16[21];
-                List<List<Card>> lSubHands = new List<List<Card>>();
-                for (Int32 i = 0; i < 21; i++)
-                {
-                    List<Card> lSubHand = new List<Card>();
-                    for (Int32 j = 0; j < 5; j++)
-                        lSubHand.Add(l[x][PokerLib.perm7[i, j]]);
-                    lSubHands.Add(lSubHand);
-                    iHandValues[i] = PokerLib.eval_5hand_fast_jb(lSubHand);
-                }
-                iWinIndex[x] = iHandValues.ToList().IndexOf(iHandValues.Min());
-            }
-            return iWinIndex;
-        }
-
-        private static int[] GetPlayersHandWinIndexes_NoAllocs(List<List<Card>> players7, int[] scratchIdx, List<Card> tmp5)
-        {
-            if (scratchIdx == null || scratchIdx.Length != players7.Count)
-                scratchIdx = new int[players7.Count];
-
-            for (int p = 0; p < players7.Count; p++)
-            {
-                var seven = players7[p];
-
-                ushort best = ushort.MaxValue;
-                int bestRow = 0;
-
-                // Sweep the 21 combinations using perm7; reuse tmp5 and just repoint elements.
-                for (int row = 0; row < 21; row++)
-                {
-                    tmp5[0] = seven[PokerLib.perm7[row, 0]];
-                    tmp5[1] = seven[PokerLib.perm7[row, 1]];
-                    tmp5[2] = seven[PokerLib.perm7[row, 2]];
-                    tmp5[3] = seven[PokerLib.perm7[row, 3]];
-                    tmp5[4] = seven[PokerLib.perm7[row, 4]];
-
-                    var v = PokerLib.eval_5hand_fast_jb(tmp5);
-                    if (v < best) { best = v; bestRow = row; }
-                }
-
-                scratchIdx[p] = bestRow;
-            }
-
-            return scratchIdx;
-        }
-
-        private List<Card> GetSubHand(List<Card> l, Int32 iIndex)
-        {
-            List<Card> lSubHand = new List<Card>();
-            for (Int32 j = 0; j < 5; j++)
-                lSubHand.Add(l[PokerLib.perm7[iIndex, j]]);
-
-            return lSubHand;
         }
 
         public string GetNameOfHand(int iRank)
@@ -351,12 +298,160 @@ namespace poker.net.Pages
             return sReturn;
         }
 
-        private static List<Card> SortHand(IEnumerable<Card> hand)
+        private static string GetFixedDeck(int selectedWin)
         {
-            return hand
-                .OrderBy(c => c.Value)
-                .ThenBy(c => c.Face) 
-                .ToList();
+            // Helper: compose a full 52-card deck string from a 23-card prefix
+            static string ComposeFromTop23(IReadOnlyList<int> top23)
+            {
+                var used = new HashSet<int>(top23);
+                var rest = new List<int>(52 - top23.Count);
+                for (int id = 1; id <= 52; id++)
+                    if (!used.Contains(id)) rest.Add(id);
+
+                var all = new List<int>(52);
+                all.AddRange(top23);
+                all.AddRange(rest);
+                return string.Join('|', all);
+            }
+
+            // Build first 23 cards: (P1–P9 hole 1, P1–P9 hole 2, 5 board cards)
+            // P1 is the intended winner; case 11 ties P1–P3 with identical hands.
+            List<int> t;
+
+            switch (selectedWin)
+            {
+                // 0 = Royal Flush (Spades) — P1 only
+                case 0:
+                    t = new()
+                    {
+                        1, 6, 14, 18, 22, 26, 30, 15, 19,
+                        49, 35, 31, 47, 51, 34, 8, 10, 46,
+                        45, 41, 37, 7, 11
+                    };
+                    return ComposeFromTop23(t);
+
+                // 1 = Straight Flush (Hearts 4–8) — P1 only
+                case 1:
+                    t = new()
+                    {
+                        30, 8, 12, 19, 23, 27, 31, 48, 16,
+                        26, 35, 47, 51, 36, 43, 39, 31, 3
+                    };
+                    t[16] = 40; // fix duplicate (use 10♣)
+                    t[17] = 3;  // P9 second card
+                    t.AddRange(new[] { 22, 18, 14, 52, 15 });
+                    return ComposeFromTop23(t);
+
+                // 2 = Four of a Kind (Kings) — P1 only
+                case 2:
+                    t = new()
+                    {
+                        51, 12, 19, 27, 36, 43, 8, 16, 28,
+                        52, 15, 24, 32, 47, 39, 11, 23, 31,
+                        49, 50, 35, 20, 7
+                    };
+                    return ComposeFromTop23(t);
+
+                // 3 = Full House (Aces over Sevens) — P1 only
+                case 3:
+                    t = new()
+                    {
+                        3, 51, 43, 39, 47, 36, 32, 52, 45,
+                        26, 8, 12, 16, 20, 23, 40, 11, 24,
+                        4, 2, 25, 35, 48
+                    };
+                    return ComposeFromTop23(t);
+
+                // 4 = Flush (Clubs) — P1 only
+                case 4:
+                    t = new()
+                    {
+                        4, 3, 28, 24, 12, 16, 48, 23, 19,
+                        36, 51, 6, 43, 50, 31, 27, 46, 30,
+                        40, 20, 8, 47, 35
+                    };
+                    return ComposeFromTop23(t);
+
+                // 5 = Straight (5–9 mixed) — P1 only
+                case 5:
+                    t = new()
+                    {
+                        17, 3, 47, 43, 51, 2, 39, 40, 24,
+                        23, 8, 12, 16, 19, 48, 15, 11, 52,
+                        26, 31, 36, 49, 7
+                    };
+                    return ComposeFromTop23(t);
+
+                // 6 = Straight Ace-Low (A–2–3–4–5) — P1 only - Checking Display: See EvalEngine.SortHand()
+                case 6:
+                    t = new()
+                    {
+                        1, 36, 35, 51, 48, 42, 24, 23, 27,
+                        7, 43, 40, 50, 31, 39, 32, 34, 46,
+                        19, 16, 10, 52, 47
+                    };
+                    return ComposeFromTop23(t);
+
+                // 7 = Three of a Kind (Queens) — P1 only
+                case 7:
+                    t = new()
+                    {
+                        45, 3, 43, 39, 27, 52, 31, 42, 40,
+                        46, 32, 16, 12, 24, 15, 36, 8, 23,
+                        48, 35, 6, 17, 51
+                    };
+                    return ComposeFromTop23(t);
+
+                // 8 = Two Pair — P1 only
+                case 8:
+                    t = new()
+                    {
+                        1, 51, 43, 39, 47, 36, 32, 52, 46,
+                        27, 8, 12, 16, 20, 23, 40, 11, 24,
+                        3, 28, 6, 33, 48
+                    };
+                    return ComposeFromTop23(t);
+
+                // 9 = Pair (pocket Jacks) — P1 only
+                case 9:
+                    t = new()
+                    {
+                        41, 3, 51, 39, 31, 24, 19, 12, 50,
+                        42, 52, 40, 21, 29, 11, 20, 18, 2,
+                        16, 35, 46, 25, 8
+                    };
+                    return ComposeFromTop23(t);
+
+                // 10 = High Card (A-high) — P1 only
+                case 10:
+                    t = new()
+                    {
+                        1, 12, 39, 31, 19, 44, 30, 18, 41,
+                        43, 26, 14, 11, 15, 29, 40, 16, 32,
+                        51, 36, 22, 47, 8
+                    };
+                    return ComposeFromTop23(t);
+
+                // 11 = Three-Player Tie (Aces & Kings) — P1–P3 tie
+                case 11:
+                    t = new()
+                    {
+                        49, 50, 51, 31, 24, 19, 40, 33, 36,
+                        12, 11, 18, 29, 14, 15, 32, 41, 43,
+                        4, 3, 52, 47, 25
+                    };
+                    return ComposeFromTop23(t);
+
+                // Default fallback (Straight win)
+                default:
+                    t = new()
+                    {
+                        1, 47, 43, 39, 27, 40, 46, 38, 45,
+                        35, 44, 48, 36, 20, 34, 10, 33, 41,
+                        51, 32, 22, 13, 7
+                    };
+                    return ComposeFromTop23(t);
+            }
         }
 
         #endregion
