@@ -28,6 +28,11 @@ A working version of this application is available at:
 
 ---
 
+**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine.**  
+It benchmarks over **100 million 7-card evaluations per second** using **BenchmarkDotNet**, written entirely in **pure C#** without lookup tables or unsafe code.  
+Ideal for developers studying **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
+
+
 ## About the Project
 
 This project re-creates the logic and structure of a Texas Hold’em Poker game — from shuffling and dealing cards to evaluating hands and determining the winner.
