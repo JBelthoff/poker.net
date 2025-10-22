@@ -16,7 +16,7 @@ namespace poker.net.Services
         /// scores: ushort[9] (Cactus Kev score; lower is stronger),
         /// ranks: int[9] (1=Straight Flush .. 9=High Card),
         /// bestIndexes: int[9] (perm7 row 0..20 for best 5-card combo),
-        /// bestHands: List&lt;List&lt;Card&gt;&gt; (UI-sorted 5-card best hands).
+        /// bestHands: List<List<Card>> (UI-sorted 5-card best hands).
         /// </returns>
         public static (ushort[] scores, int[] ranks, int[] bestIndexes, List<List<Card>> bestHands)
             EvaluateRiverNinePlayers(IReadOnlyList<Card> deck)
