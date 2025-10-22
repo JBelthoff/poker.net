@@ -95,6 +95,55 @@ Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** —
 
 ---
 
+## 🧪 Running Benchmarks Locally
+
+To reproduce the same performance results using **BenchmarkDotNet**, follow these steps:
+
+1. **Add a new project** to your existing solution:  
+   - Right-click the solution → **Add → New Project** → select **C# Console App**  
+   - Name it **PokerBenchmarks**  
+   - ⚠️ **Important:** Make sure it is **not inside** the `poker.net` directory.
+
+2. **Install BenchmarkDotNet**  
+   - Right-click the new project → **Manage NuGet Packages**  
+   - Search for `BenchmarkDotNet` and install the latest version.
+
+3. **Replace `Program.cs`**  
+   - Delete the default `Program.cs` created by Visual Studio.  
+   - Right-click **PokerBenchmarks** → **Add → Existing Item**  
+   - Add the two files from `poker.net/x_Benchmark` and confirm overwrites:  
+     - `FinalRiverBench.cs`  
+     - `Program.cs`
+
+4. **Add a Project Reference**  
+   - Right-click **PokerBenchmarks** → **Add → Project Reference**  
+   - Select the `poker.net` project.
+
+5. **Set as Startup Project**  
+   - Right-click **PokerBenchmarks** → **Set as Startup Project**.
+
+6. **Build and Run in Release Mode**  
+   - Use the **Release** configuration (not Debug).  
+   - Run the project to execute the benchmarks.  
+
+**BenchmarkDotNet will generate reports in:**  
+
+```
+bin/Release/net8.0/BenchmarkDotNet.Artifacts/results/
+```
+
+**You’ll find CSV, Markdown (.md), and HTML output files such as:**  
+
+```
+PokerBenchmarks.FinalRiverBench-report.csv
+PokerBenchmarks.FinalRiverBench-report-github.md
+PokerBenchmarks.FinalRiverBench-report.html
+```
+
+
+
+---
+
 ### 📁 Benchmark Files
 
 Benchmark source files are located here:
