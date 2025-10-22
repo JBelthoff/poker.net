@@ -6,7 +6,7 @@ using poker.net.Services;
 
 namespace poker.net.Pages
 {
-    public class IndexModel : PageModel
+    public class IndexModel : PageModel 
     {
         #region Properties
         private readonly ILogger<IndexModel> _logger;

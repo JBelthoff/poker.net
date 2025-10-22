@@ -9,7 +9,7 @@
     /// <summary>
     /// Provides utility methods for working with decks of cards,
     /// including shuffling, deep copying, and serializing IDs.
-    /// </summary>
+    /// </summary> 
     public static class DeckHelper
     {
         /// <summary>

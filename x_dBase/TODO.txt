@@ -1,5 +1,5 @@
 ﻿## Sql Server
-Update DB Table [dbo].[Game] to add DealerID - Requiers update to SPROC: [dbo].[Game_InsertNewGame2]
+Update DB Table [dbo].[Game] to add DealerID - Requiers update to SPROC: [dbo].[Game_InsertNewGame2] 
 
 Correct Join DataType mismatch on this:
 	Select

@@ -8,7 +8,7 @@
     {
         /// <summary>
         /// Gets or sets the unique identifier for the card.
-        /// </summary>
+        /// </summary> 
         public int ID { get; set; }
 
         /// <summary>

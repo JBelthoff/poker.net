@@ -5,7 +5,7 @@ namespace poker.net.Pages
 {
     public class cactus_kevModel : PageModel
     {
-        public void OnGet()
+        public void OnGet() 
         {
         }
     }

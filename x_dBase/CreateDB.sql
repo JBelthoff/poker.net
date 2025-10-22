@@ -2,7 +2,7 @@ USE [PokerApp]
 GO
 
 
-/****** Object:  UserDefinedFunction [dbo].[DelimitedSplit8K]    Script Date: 2/6/2022 9:51:09 AM ******/
+/****** Object:  UserDefinedFunction [dbo].[DelimitedSplit8K]    Script Date: 2/6/2022 9:51:09 AM ******/ 
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON

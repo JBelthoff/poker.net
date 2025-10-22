@@ -33,7 +33,7 @@ It benchmarks over **100 million 7-card evaluations per second** using **Benchma
 Ideal for developers studying **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
 
-## About the Project
+## About the Project 
 
 This project re-creates the logic and structure of a Texas Hold’em Poker game — from shuffling and dealing cards to evaluating hands and determining the winner.
 

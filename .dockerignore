@@ -29,4 +29,4 @@ README.md
 !.git/HEAD
 !.git/config
 !.git/packed-refs
-!.git/refs/heads/**
+!.git/refs/heads/** 

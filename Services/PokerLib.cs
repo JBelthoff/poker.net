@@ -1,4 +1,4 @@
-﻿namespace poker.net.Services
+﻿namespace poker.net.Services 
 {
     using poker.net.Models;
     using System;

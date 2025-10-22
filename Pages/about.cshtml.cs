@@ -5,7 +5,7 @@ namespace poker.net.Pages
 {
     public class aboutModel : PageModel
     {
-        public void OnGet()
+        public void OnGet() 
         {
         }
     }
