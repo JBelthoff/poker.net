@@ -85,50 +85,66 @@ dotnet run
 
 ### Summary
 
-Poker.net’s new `EvalEngine` was built from the ground up for speed, minimal allocation, and clear architecture.  
-Benchmarks were run using BenchmarkDotNet v0.15.4 on .NET 8.0.21, Windows 10 (22H2), and an Intel Core i9-9940X CPU.
+`EvalEngine` was built from the ground up for speed, minimal allocation, and clear architecture.  
+Benchmarks were measured with **BenchmarkDotNet v0.15.4** on **.NET 8.0.21**, **Windows 10 (22H2)**,  
+and an **Intel Core i9-9940X (14 cores / 28 threads)** CPU in *High Performance* mode.
 
-Each full 9-player river evaluation involves 189 five-card combinations (9 players × 21 combos each).
+Each full 9-player river evaluation involves 189 five-card combinations  
+(9 players × 21 combos each).
 
-| Method                             | Mean (µs/op) | Alloc/op | Derived 5-card evals/sec* |
-|------------------------------------|--------------|----------|----------------------------|
-| End-to-End (9 players • best-of-7) | 9.574        | 6.2 KB   | ≈ 20 million/sec           |
-| Engine-only (7-card → best-of-21)  | 1.645        | 0.9 KB   | ≈ 115 million/sec          |
+| Method | Mean (µs/op) | Alloc/op | Derived 5-card evals/sec* |
+|--------|--------------|----------|----------------------------|
+| End-to-End (9 players • best-of-7) | 9.574 | 6.2 KB | ≈ 20 M/sec |
+| Engine-only (7-card → best-of-21) | 1.645 | 0.9 KB | ≈ 115 M/sec |
 
-*Derived = 189 ÷ mean seconds, where each 7-card hand is evaluated by testing all 21 possible 5-card combinations.*
-
+\* Derived = 189 ÷ mean seconds, representing all 5-card combinations tested per 7-card hand.
 
 ---
 
 ### Raw Benchmark Output
 
-| Method                                             | Mean | Throughput | Allocated |
-|----------------------------------------------------|------|-------------|-----------|
-| Engine-only: 9 × (7-card → best-of-21)            | 1.645 µs | ~607 903 ops/s | ~888 B |
-| End-to-End: 9 players (best-of-7) winner (EvalEngine) | 9.574 µs | ~104 450 ops/s | ~6 208 B |
+| Method | Mean | Throughput | Allocated |
+|--------|------|-------------|-----------|
+| Engine-only (7-card → best-of-21) | 1.645 µs | ~607 903 ops/s | ~888 B |
+| End-to-End (9 players • best-of-7) | 9.574 µs | ~104 450 ops/s | ~6 208 B |
 
-*Confidence interval (99.9%) – Engine-only [1.643 ; 1.648] µs, End-to-End [9.549 ; 9.598] µs*  
-*A full 9-player river involves 189 five-card evaluations; derived throughput ≈ 115 M (engine-only) and ≈ 20 M (E2E) 5-card evals/sec.*
-
-
-
+*Confidence (99.9 %) – Engine-only [1.643 ; 1.648] µs, E2E [9.549 ; 9.598] µs.*  
+*A full 9-player river → ≈ 115 M (engine-only) and ≈ 20 M (E2E) 5-card evals/sec.*
 
 ---
 
-### How It Compares
+### Same-Hardware Comparison
 
-| Evaluator | Type | Cards / Eval | Reported Speed (C#) | Memory Usage | Notes |
-|------------|------|--------------|----------------------|--------------|-------|
-| **Poker.net (EvalEngine)** | Algorithmic (computed) | 5-card | ≈ 115 M evals/sec | ~6 KB/op | Pure .NET 8, no lookup tables |
+> **Note:** Results below were measured on the same hardware using identical logic.  
+> The reference C version is a direct build of the classic `pokerlib.c` [(Suffecool)](https://github.com/suffecool/pokerlib) algorithm.
+
+| Implementation | Runtime / Toolchain | Time (s) | Evals/sec (M) | % of C Speed |
+|----------------|--------------------|-----------|----------------|--------------|
+| **C** (MSVC 19.44 / O2 GL) | Native (C) | 2.661 | 3.76 | 100 % |
+| **.NET 8** (RyuJIT TieredPGO + Server GC) | Managed (C#) | 3.246 | 3.08 | ≈ 82 % |
+
+Both produced the same deterministic checksum = `41,364,791,855`.  
+This shows .NET 8 achieves roughly **82 % of native C throughput** for a pure compute loop, with identical results.
+
+---
+
+### Published Comparisons (for Context)
+
+> These reference figures come from publicly available project benchmarks.  
+> They were not all tested on the same machine or under identical workloads.
+
+| Evaluator | Type | Cards / Eval | Reported Speed | Memory Usage | Notes |
+|------------|------|--------------|----------------|--------------|-------|
+| **Poker.net (EvalEngine)** | Algorithmic (computed) | 5-card | ≈ 115 M evals/sec (measured) | ~6 KB/op | Pure .NET 8, no lookup tables |
 | **SnapCall** (`platatat/SnapCall`) | Lookup table | 7-card (precomputed) | ≈ 7.5 M lookups/sec | ~2 GB | Constant-time lookups |
 | **HenryRLee/PokerHandEvaluator** | Lookup table (C++) | 7-card | ≈ 10–15 M/sec | ~2 GB | Perfect-hash table |
 | **OMPEval (C++)** | Algorithmic | 7-card | ≈ 35–40 M/sec | Low | Optimized native code |
-| **Cactus Kev (C)** | Algorithmic | 5-card | 10–20 M/sec | Negligible | Original native C version |
+| **Cactus Kev (C)** | Algorithmic | 5-card | 10–20 M/sec (published) | Negligible | Original native C version |
+
+Unlike lookup-table engines like **SnapCall** or **PokerHandEvaluator** that load multi-gigabyte rank tables,  
+**Poker.net** computes every rank dynamically in real time — no tables, no unsafe code, no native dependencies.
 
 
-Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** — which load multi-gigabyte precomputed data into memory —  **Poker.net computes results dynamically** in real time, yet still meets or surpasses many lookup-based speeds while using almost no memory.
-
-> 🔥 In other words: *The engine evaluates a full 7-card hand (selecting the best 5-card combination) approximately **115 million times per second** in pure C# — no table lookups, no unsafe code, no native dependencies.*
 
 ---
 
