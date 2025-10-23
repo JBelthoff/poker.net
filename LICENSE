@@ -4,7 +4,7 @@ Copyright (c) 2025 John Belthoff
 
 This project includes a C# port of Cactus Kev’s Poker Hand Evaluator algorithm,
 originally developed by Kevin Suffecool and released into the public domain
-(http://suffecool.net/poker/evaluator.html).
+(http://suffe.cool/poker/evaluator.html).
 
 All other code in this repository is © John Belthoff and released under the MIT License.
 
