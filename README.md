@@ -41,7 +41,7 @@ Ideal for developers studying **algorithmic optimization**, **combinatorial eval
 
 This project re-creates the logic and structure of a Texas Hold’em Poker game — from shuffling and dealing cards to evaluating hands and determining the winner.
 
-The application is written in **ASP.NET Core (C#)** and uses a **C# port of Cactus Kev’s Poker Hand Evaluator**, originally developed in C++.  
+The application is written in **ASP.NET Core (C#)** and uses a **C# port of Cactus Kev’s Poker Hand Evaluator**, originally developed in C.  
   
 Although Cactus Kev’s original site is no longer online, a [copy of his article](https://poker-calculator.johnbelthoff.com/cactus_kev) is available on the live site for reference.
 
@@ -66,12 +66,15 @@ cd poker.net
 dotnet run
 ```
 
-> 🔧 **Tip:** After running `dotnet run`, check the console log for the exact URL (“Now listening on…”). Then open that URL (usually https://localhost:5001) in your browser.  
-  
-> 💡 **Note:**  
-> By default, the app runs in **No-DB (Static)** mode using an in-memory deck.  
-> To enable **SQL Server** support for recording games, set **`"UseSqlServer": true`** in your configuration and ensure SQL Server is installed.  
-> See [**SQL Server Setup**](#sql-server-setup) for step-by-step instructions.
+> **Tip:**  
+> After running `dotnet run`, check the console log for the exact URL (“Now listening on…”).  
+> Then open that URL (usually `https://localhost:5001`) in your browser.  
+>
+> **Note:**  
+> By default, the app runs in No-DB (Static) mode using an in-memory deck.  
+> To enable SQL Server support for recording games, set `"UseSqlServer": true` in your configuration and ensure SQL Server is installed.  
+> See *SQL Server Setup* for step-by-step instructions.
+
 
 
 
@@ -82,46 +85,46 @@ dotnet run
 
 ### Summary
 
-Poker.net’s new `EvalEngine` was built from the ground up for **speed, minimal allocation, and clear architecture**.  
-  
-Benchmarks were run using **BenchmarkDotNet v0.15.4** on **.NET 8.0.21**, Windows 10 (22H2), and an **Intel Core i9-9940X** CPU.
+Poker.net’s new `EvalEngine` was built from the ground up for speed, minimal allocation, and clear architecture.  
+Benchmarks were run using BenchmarkDotNet v0.15.4 on .NET 8.0.21, Windows 10 (22H2), and an Intel Core i9-9940X CPU.
 
-Each full 9-player river evaluation involves **189 five-card combinations** (9 players × 21 combos each).
+Each full 9-player river evaluation involves 189 five-card combinations (9 players × 21 combos each).
 
-| Method | Mean (µs/op) | Alloc/op | Derived 5-card evals/sec* |
-|:----------------------------------------------|--------------:|----------:|--------------------------:|
-| **End-to-End (9 players • best-of-7)** | 9.574 | 6.2 KB | ≈ **20 million/sec** |
-| **Engine-only (7-card → best-of-21)** | 1.645 | 0.9 KB | ≈ **115 million/sec** |
+| Method                             | Mean (µs/op) | Alloc/op | Derived 5-card evals/sec* |
+|------------------------------------|--------------|----------|----------------------------|
+| End-to-End (9 players • best-of-7) | 9.574        | 6.2 KB   | ≈ 20 million/sec           |
+| Engine-only (7-card → best-of-21)  | 1.645        | 0.9 KB   | ≈ 115 million/sec          |
 
-\*Derived = 189 ÷ mean seconds, where each 7-card hand is evaluated by testing all 21 possible 5-card combinations.  
-  
-This expresses throughput in the same unit (5-card evaluations per second) used by other poker evaluators.
+*Derived = 189 ÷ mean seconds, where each 7-card hand is evaluated by testing all 21 possible 5-card combinations.*
+
 
 ---
 
 ### Raw Benchmark Output
 
-| Method                                              | Mean      | Throughput      | Allocated |
-|----------------------------------------------------|----------:|----------------:|----------:|
-| Engine-only: 9 × (7-card → best-of-21)             | 1.645 µs  | ~607,903 ops/s  | ~888 B  |
-| End-to-End: 9 players (best-of-7) winner (EvalEngine) | 9.574 µs  | ~104,450 ops/s  | ~6,208 B  |
+| Method                                             | Mean | Throughput | Allocated |
+|----------------------------------------------------|------|-------------|-----------|
+| Engine-only: 9 × (7-card → best-of-21)            | 1.645 µs | ~607 903 ops/s | ~888 B |
+| End-to-End: 9 players (best-of-7) winner (EvalEngine) | 9.574 µs | ~104 450 ops/s | ~6 208 B |
 
-- **Confidence interval (99.9%)** – Engine-only [1.643 ; 1.648] µs, End-to-End [9.549 ; 9.598] µs  
-- A full 9-player river involves **189 five-card evaluations**; derived throughput ≈ **115 M** (engine-only) and **~20 M** (E2E) 5-card evals/sec.
+*Confidence interval (99.9%) – Engine-only [1.643 ; 1.648] µs, End-to-End [9.549 ; 9.598] µs*  
+*A full 9-player river involves 189 five-card evaluations; derived throughput ≈ 115 M (engine-only) and ≈ 20 M (E2E) 5-card evals/sec.*
+
 
 
 
 ---
 
-### 📊 How It Compares
+### How It Compares
 
 | Evaluator | Type | Cards / Eval | Reported Speed (C#) | Memory Usage | Notes |
-|------------|------|--------------|--------------------:|--------------:|-------|
-| **Poker.net (EvalEngine)** | Algorithmic (computed) | 5-card | **≈ 115 M evals/sec** | ~6 KB/op | Pure .NET 8, no lookup tables |
-| **SnapCall** ([platatat/SnapCall](https://github.com/platatat/SnapCall)) | Lookup table | 7-card (precomputed) | **≈ 7.5 M lookups/sec** | ~2 GB | Constant-time lookups |
+|------------|------|--------------|----------------------|--------------|-------|
+| **Poker.net (EvalEngine)** | Algorithmic (computed) | 5-card | ≈ 115 M evals/sec | ~6 KB/op | Pure .NET 8, no lookup tables |
+| **SnapCall** (`platatat/SnapCall`) | Lookup table | 7-card (precomputed) | ≈ 7.5 M lookups/sec | ~2 GB | Constant-time lookups |
 | **HenryRLee/PokerHandEvaluator** | Lookup table (C++) | 7-card | ≈ 10–15 M/sec | ~2 GB | Perfect-hash table |
-| **OMPEval** (C++) | Algorithmic | 7-card | ≈ 35–40 M/sec | Low | Optimized native code |
-| **Cactus Kev (C)** | Algorithmic | 5-card | 10–20 M/sec | negligible | Original native C version |
+| **OMPEval (C++)** | Algorithmic | 7-card | ≈ 35–40 M/sec | Low | Optimized native code |
+| **Cactus Kev (C)** | Algorithmic | 5-card | 10–20 M/sec | Negligible | Original native C version |
+
 
 Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** — which load multi-gigabyte precomputed data into memory —  **Poker.net computes results dynamically** in real time, yet still meets or surpasses many lookup-based speeds while using almost no memory.
 
@@ -198,15 +201,16 @@ Benchmark source files are located here:
 
 ## SQL Server Setup
 
-> 📝 **Skip this section if you're running in No-DB (Static) mode.**
+> Skip this section if you're running in No-DB (Static) mode.
 
-1. Create a **SQL Server** database named `PokerApp`.
-2. Create a **Login** and **User** for the database.
-3. Run the script **`CreateDB.sql`** (located in the `x_dBase` directory) against `PokerApp`.
-4. Update your connection string (via `appsettings.json`, **User Secrets**, or environment variables).
-5. Set **`"UseSqlServer": true`** in your configuration (appsettings.json or User Secrets).
-6. Build and run the project (`dotnet run`, **Docker**, or **IIS Express**).
+1. Create a SQL Server database named `PokerApp`.  
+2. Create a Login and User for the database.  
+3. Run the script [`CreateDB.sql`](x_dBase/CreateDB.sql) against `PokerApp`.  
+4. Update your connection string (via `appsettings.json`, User Secrets, or environment variables).  
+5. Set `"UseSqlServer": true` in your configuration.  
+6. Build and run the project (`dotnet run`, Docker, or IIS Express).  
 7. Visit the app in your browser and start playing!
+
 
 ---
 
