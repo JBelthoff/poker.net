@@ -93,7 +93,7 @@ This expresses throughput in the same unit (5-card evaluations per second) used 
 
 | Evaluator | Type | Cards / Eval | Reported Speed (C#) | Memory Usage | Notes |
 |------------|------|--------------|--------------------:|--------------:|-------|
-| **Poker.net (EvalEngine)** | Algorithmic (computed) | 5-card | **≈ 20 M evals/sec** | ~6 KB/op | Pure .NET 8, no lookup tables |
+| **Poker.net (EvalEngine)** | Algorithmic (computed) | 5-card | **≈ 115 M evals/sec** | ~6 KB/op | Pure .NET 8, no lookup tables |
 | **SnapCall** ([platatat/SnapCall](https://github.com/platatat/SnapCall)) | Lookup table | 7-card (precomputed) | **≈ 7.5 M lookups/sec** | ~2 GB | Constant-time lookups |
 | **HenryRLee/PokerHandEvaluator** | Lookup table (C++) | 7-card | ≈ 10–15 M/sec | ~2 GB | Perfect-hash table |
 | **OMPEval** (C++) | Algorithmic | 7-card | ≈ 35–40 M/sec | Low | Optimized native code |
