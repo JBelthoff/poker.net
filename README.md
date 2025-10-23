@@ -13,7 +13,7 @@
 [![Docker](https://img.shields.io/badge/Containerized-Docker-blue?logo=docker)](https://www.docker.com/)
 
 
-A modern **ASP.NET Core (Razor Pages)** web app that evaluates **Texas Hold’em poker hands** using **Cactus Kev’s algorithm**, re-engineered for **.NET 8 performance**.
+A modern **ASP.NET Core (Razor Pages)** web app that evaluates **Texas Hold’em poker hands** using [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib), re-engineered for **.NET 8 performance**.
 
 ---
 
@@ -29,7 +29,9 @@ A working version of this application is available at:
 ---
 
 **This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine.**  
+  
 It benchmarks over **100 million 7-card evaluations per second** using **BenchmarkDotNet**, written entirely in **pure C#** without lookup tables or unsafe code.  
+  
 Ideal for developers studying **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
 
@@ -100,6 +102,18 @@ Unlike table-based evaluators such as **SnapCall** or **PokerHandEvaluator** —
 
 ---
 
+### 📚 Algorithm Lineage and Faithfulness
+
+This evaluator is a modern C# translation of [Cactus Kev’s Poker Hand Evaluator](https://github.com/suffecool/pokerlib) — the classic C implementation that popularized prime-number-based hand evaluation.  
+  
+All core logic is preserved: flush and straight table lookups, perfect-hash prime products, and rank thresholds identical to Kev’s original.  
+  
+Where Kev used C arrays, macros, and pointer arithmetic, **Poker.net** employs managed data structures, `Span<T>` buffers, and .NET 8 JIT optimizations to reach equivalent throughput without unsafe code or lookup tables.  
+  
+Comprehensive validation confirms one-to-one rank and frequency equivalence with the original algorithm.  
+
+---
+
 ## 🧪 Running Benchmarks Locally
 
 To reproduce the same performance results using **BenchmarkDotNet**, follow these steps:
@@ -144,8 +158,6 @@ PokerBenchmarks.FinalRiverBench-report.csv
 PokerBenchmarks.FinalRiverBench-report-github.md
 PokerBenchmarks.FinalRiverBench-report.html
 ```
-
-
 
 ---
 
