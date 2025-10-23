@@ -35,6 +35,8 @@ It benchmarks over **100 million 7-card evaluations per second** using **Benchma
 Ideal for developers studying **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
 
+
+
 ## About the Project 
 
 This project re-creates the logic and structure of a Texas Hold’em Poker game — from shuffling and dealing cards to evaluating hands and determining the winner.
@@ -51,6 +53,26 @@ At this stage, the app:
 - **Displays detailed results**
 
 Future updates will continue refining gameplay and add more interactive features.
+
+---
+
+## ⚙️ Quick Start
+
+Clone and launch the project:
+
+```bash
+git clone https://github.com/JBelthoff/poker.net.git
+cd poker.net
+dotnet run
+```
+
+> 💡 **Note:**  
+> By default, the app runs in **No-DB (Static)** mode using an in-memory deck.  
+> To enable **SQL Server** support for recording games, set **`"UseSqlServer": true`** in your configuration and ensure SQL Server is installed.  
+> See [**SQL Server Setup**](#sql-server-setup) for step-by-step instructions.
+
+
+
 
 ---
 
@@ -172,14 +194,17 @@ Benchmark source files are located here:
 
 ---
 
-## Local Setup
+## SQL Server Setup
+
+> 📝 **Skip this section if you're running in No-DB (Static) mode.**
 
 1. Create a **SQL Server** database named `PokerApp`.
 2. Create a **Login** and **User** for the database.
-3. Run the script **`CreateDB.sql`** (in the `x_dBase` directory) against `PokerApp`.
-4. Update your connection string (via `appsettings.json`, User Secrets, or environment variables).
-5. Build and run the project (`dotnet run`, Docker, or IIS Express).
-6. Visit the app in your browser and start playing!
+3. Run the script **`CreateDB.sql`** (located in the `x_dBase` directory) against `PokerApp`.
+4. Update your connection string (via `appsettings.json`, **User Secrets**, or environment variables).
+5. Set **`"UseSqlServer": true`** in your configuration (appsettings.json or User Secrets).
+6. Build and run the project (`dotnet run`, **Docker**, or **IIS Express**).
+7. Visit the app in your browser and start playing!
 
 ---
 

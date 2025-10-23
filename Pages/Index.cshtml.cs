@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using poker.net.Helper;
+using poker.net.Interfaces;
 using poker.net.Models;
 using poker.net.Services;
 
@@ -11,7 +12,11 @@ namespace poker.net.Pages
         #region Properties
         private readonly ILogger<IndexModel> _logger;
         
-        private readonly DbHelper _db;
+        private readonly DbHelper? _db;
+
+        private readonly IDeckService _deckService;
+
+        private readonly bool _useSql;
 
         public Int32[] h { get; set; }
 
@@ -44,15 +49,15 @@ namespace poker.net.Pages
 
         public Int32 iWinValue { get; set; }
 
-        private readonly List<Card> _tmp5 = new() { default!, default!, default!, default!, default! };
-
         #endregion
 
         #region Contructor
 
-        public IndexModel(ILogger<IndexModel> logger, DbHelper db)
+        public IndexModel(ILogger<IndexModel> logger, IDeckService deckService, IConfiguration config, DbHelper? db = null)
         {
             _logger = logger;
+            _deckService = deckService;
+            _useSql = config.GetValue<bool>("UseSqlServer");
             _db = db;
         }
 
@@ -124,19 +129,22 @@ namespace poker.net.Pages
         {
             var bTest = false;
             var SelectedWin = 12; // See GetFixedDeck() for values
+            var sourceDeck = await _deckService.RawDeckAsync();
 
             if (!bTest)
             {
-                ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. await _db.RawDeckAsync()]);
+                ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. sourceDeck]);
                 DeckHelper.Shuffle(ShuffledDeck);
-
                 Game.CardIds = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
-                Game = await _db.RecordNewGameAsync(Game, NetworkHelper.GetIPAddress(HttpContext));
+                if (_useSql && _db is not null)
+                {
+                    Game = await _db.RecordNewGameAsync(Game, NetworkHelper.GetIPAddress(HttpContext));
+                }
             }
             else
             {
                 Game.CardIds = GetFixedDeck(SelectedWin);
-                ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
+                ShuffledDeck = GetShuffledDeck(sourceDeck, Game.CardIds);
             }
 
             ModelState.Clear();
@@ -155,7 +163,9 @@ namespace poker.net.Pages
                 return;
             }
 
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
+            var source = await _deckService.RawDeckAsync();
+            ShuffledDeck = GetShuffledDeck(source, Game.CardIds);
+
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -172,7 +182,9 @@ namespace poker.net.Pages
                 return;
             }
 
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
+            var source = await _deckService.RawDeckAsync();
+            ShuffledDeck = GetShuffledDeck(source, Game.CardIds);
+
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
@@ -198,7 +210,9 @@ namespace poker.net.Pages
             }
 
             // 1) Rebuild shuffled deck from hidden field
-            ShuffledDeck = GetShuffledDeck(await _db.RawDeckAsync(), Game.CardIds);
+            var source = await _deckService.RawDeckAsync();
+            ShuffledDeck = GetShuffledDeck(source, Game.CardIds);
+
 
             if (ShuffledDeck.Count < 23)
             {
