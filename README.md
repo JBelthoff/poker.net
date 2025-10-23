@@ -59,6 +59,7 @@ Future updates will continue refining gameplay and add more interactive features
 ### Summary
 
 Poker.net’s new `EvalEngine` was built from the ground up for **speed, minimal allocation, and clear architecture**.  
+  
 Benchmarks were run using **BenchmarkDotNet v0.15.4** on **.NET 8.0.21**, Windows 10 (22H2), and an **Intel Core i9-9940X** CPU.
 
 Each full 9-player river evaluation involves **189 five-card combinations** (9 players × 21 combos each).
@@ -69,6 +70,7 @@ Each full 9-player river evaluation involves **189 five-card combinations** (9 p
 | **Engine-only (7-card → best-of-21)** | 1.645 | 0.9 KB | ≈ **115 million/sec** |
 
 \*Derived = 189 ÷ mean seconds, where each 7-card hand is evaluated by testing all 21 possible 5-card combinations.  
+  
 This expresses throughput in the same unit (5-card evaluations per second) used by other poker evaluators.
 
 ---
