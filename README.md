@@ -66,6 +66,8 @@ cd poker.net
 dotnet run
 ```
 
+> 🔧 **Tip:** After running `dotnet run`, check the console log for the exact URL (“Now listening on…”). Then open that URL (usually https://localhost:5001) in your browser.  
+  
 > 💡 **Note:**  
 > By default, the app runs in **No-DB (Static)** mode using an in-memory deck.  
 > To enable **SQL Server** support for recording games, set **`"UseSqlServer": true`** in your configuration and ensure SQL Server is installed.  
