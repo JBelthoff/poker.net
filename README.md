@@ -212,7 +212,13 @@ Benchmark source files are located here:
 7. Visit the app in your browser and start playing!
 
 
+
+
+
 ---
 
+💼 Interested in performance engineering or .NET optimization work?  
+Contact me via [LinkedIn](https://www.linkedin.com/in/john-belthoff/) or visit [johnbelthoff.com](https://www.johnbelthoff.com/).  
+  
 © 2025 **John Belthoff**  
 [www.johnbelthoff.com](https://www.johnbelthoff.com/)
