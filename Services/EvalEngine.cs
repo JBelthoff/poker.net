@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace poker.net.Services
 {
@@ -65,28 +66,28 @@ namespace poker.net.Services
         /// Returns the perm7 row (0..20) of the best 5-card subhand from a 7-card set.
         /// Reuses <paramref name="tmp5"/> to avoid allocations while iterating all 21 combinations.
         /// </summary>
-        private static int GetBestOf7_NoAllocs(IReadOnlyList<Card> seven, Card[] tmp5)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static int GetBestOf7_NoAllocs(IReadOnlyList<Card> seven, Card[] tmp5 /* kept for signature parity */)
         {
             ushort best = ushort.MaxValue;
             int bestRow = 0;
 
-            var perm = PokerLib.Perm7.Indices; // flattened byte[105]; 21 rows × 5 cols
+            var perm = PokerLib.Perm7.Indices; // ReadOnlySpan<byte>; 21 rows × 5 cols (flattened)
 
             for (int row = 0; row < 21; row++)
             {
-                int i = row * 5; // start offset for this row
+                int i = row * 5;
 
-                // JIT widens byte -> int for indexers
-                tmp5[0] = seven[perm[i + 0]];
-                tmp5[1] = seven[perm[i + 1]];
-                tmp5[2] = seven[perm[i + 2]];
-                tmp5[3] = seven[perm[i + 3]];
-                tmp5[4] = seven[perm[i + 4]];
+                // Read the 5 card VALUES directly (no copying Card structs into tmp5)
+                int v0 = seven[perm[i + 0]].Value;
+                int v1 = seven[perm[i + 1]].Value;
+                int v2 = seven[perm[i + 2]].Value;
+                int v3 = seven[perm[i + 3]].Value;
+                int v4 = seven[perm[i + 4]].Value;
 
-                var v = PokerLib.eval_5cards_fast(
-                    tmp5[0].Value, tmp5[1].Value, tmp5[2].Value, tmp5[3].Value, tmp5[4].Value);
-
-                if (v < best) { best = v; bestRow = row; }
+                // Hot-path 5-card evaluator (already inlined)
+                var score = PokerLib.eval_5cards_fast(v0, v1, v2, v3, v4);
+                if (score < best) { best = score; bestRow = row; }
             }
 
             return bestRow;

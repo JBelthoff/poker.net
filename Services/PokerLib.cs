@@ -3,6 +3,7 @@
     using poker.net.Models;
     using System;
     using System.Collections.Generic;
+    using System.Runtime.CompilerServices;
 
     /// <summary>
     /// Summary description for PokerLib
@@ -44,6 +45,7 @@
 
         #region Methods
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort eval_5cards_fast(int c1, int c2, int c3, int c4, int c5)
         {
             uint q = (uint)(c1 | c2 | c3 | c4 | c5) >> 16;
@@ -60,6 +62,7 @@
             return (eval_5cards_fast(l[0].Value, l[1].Value, l[2].Value, l[3].Value, l[4].Value));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int hand_rank_jb(int value)
         {
 
@@ -123,6 +126,7 @@
 
         public static int RANK(int c) { return (c >> 8) & 0xF; }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint find_fast(uint u)
         {
             u += 0xE91AAA35;
@@ -2219,7 +2223,8 @@
 
         internal static class Perm7
         {
-            internal static readonly byte[] Indices =
+            // Private backing store: one-time allocation at startup.
+            private static readonly byte[] _indices = new byte[]
             {
                 0,1,2,3,4,
                 0,1,2,3,5,
@@ -2243,6 +2248,9 @@
                 1,3,4,5,6,
                 2,3,4,5,6
             };
+
+            // Read-only view; callers can’t mutate.
+            internal static ReadOnlySpan<byte> Indices => _indices;
         }
     }
 }
