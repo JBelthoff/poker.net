@@ -83,6 +83,16 @@ dotnet run
 
 ## ⚡ Performance
 
+### Version Notes
+
+Both **.NET 8** and **.NET 9** produce statistically identical benchmark results,  
+confirming consistent JIT and runtime performance across LTS and preview builds.
+
+A dedicated **`optimization`** branch is currently in progress to further improve these figures —  
+focusing on reduced allocations, tighter hot-path loops, and `Span<T>`-based memory reuse.
+
+---
+
 ### Summary
 
 `EvalEngine` was built from the ground up for speed, minimal allocation, and clear architecture.  
