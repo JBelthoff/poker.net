@@ -1,4 +1,7 @@
-﻿using poker.net.Models; 
+﻿using poker.net.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace poker.net.Services
 {
@@ -67,14 +70,18 @@ namespace poker.net.Services
             ushort best = ushort.MaxValue;
             int bestRow = 0;
 
+            var perm = PokerLib.Perm7.Indices; // flattened byte[105]; 21 rows × 5 cols
+
             for (int row = 0; row < 21; row++)
             {
-                // Map 5 indices via PokerLib.perm7
-                tmp5[0] = seven[PokerLib.perm7[row, 0]];
-                tmp5[1] = seven[PokerLib.perm7[row, 1]];
-                tmp5[2] = seven[PokerLib.perm7[row, 2]];
-                tmp5[3] = seven[PokerLib.perm7[row, 3]];
-                tmp5[4] = seven[PokerLib.perm7[row, 4]];
+                int i = row * 5; // start offset for this row
+
+                // JIT widens byte -> int for indexers
+                tmp5[0] = seven[perm[i + 0]];
+                tmp5[1] = seven[perm[i + 1]];
+                tmp5[2] = seven[perm[i + 2]];
+                tmp5[3] = seven[perm[i + 3]];
+                tmp5[4] = seven[perm[i + 4]];
 
                 var v = PokerLib.eval_5cards_fast(
                     tmp5[0].Value, tmp5[1].Value, tmp5[2].Value, tmp5[3].Value, tmp5[4].Value);
@@ -86,15 +93,18 @@ namespace poker.net.Services
         }
 
         /// <summary>
-        /// Copies the 5 winning cards (identified by perm7[row,*]) from the 7-card set into <paramref name="dst5"/>.
+        /// Copies the 5 winning cards (identified by Perm7 row) from the 7-card set into <paramref name="dst5"/>.
         /// </summary>
         private static void FillBest5(IReadOnlyList<Card> seven, int row, Card[] dst5)
         {
-            dst5[0] = seven[PokerLib.perm7[row, 0]];
-            dst5[1] = seven[PokerLib.perm7[row, 1]];
-            dst5[2] = seven[PokerLib.perm7[row, 2]];
-            dst5[3] = seven[PokerLib.perm7[row, 3]];
-            dst5[4] = seven[PokerLib.perm7[row, 4]];
+            var perm = PokerLib.Perm7.Indices;
+            int i = row * 5;
+
+            dst5[0] = seven[perm[i + 0]];
+            dst5[1] = seven[perm[i + 1]];
+            dst5[2] = seven[perm[i + 2]];
+            dst5[3] = seven[perm[i + 3]];
+            dst5[4] = seven[perm[i + 4]];
         }
 
         /// <summary>
