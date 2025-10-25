@@ -243,8 +243,12 @@
     @{
         var dealerRow = Model.Game.DealerID - 1;
         var seats = new int[9];
+
+        var order = PokerLib.DealOrder9x9.ToArray(); // ReadOnlySpan<byte> (length 81)
+
+        int baseIdx = dealerRow * 9;
         for (int i = 0; i < 9; i++)
-            seats[i] = PokerLib.DealOrder[dealerRow, i];
+            seats[i] = order[baseIdx + i]; // <-- linear indexing
     }
 
     <h2 class="display-6 fw-semibold mb-3">Results:</h2>

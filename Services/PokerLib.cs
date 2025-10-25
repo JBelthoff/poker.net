@@ -167,6 +167,7 @@
 
         #region Deal Order
 
+        [Obsolete("Use PokerLib.DealOrder9x9 instead.")]
         public static int[,] DealOrder = new int[,] {
             { 8, 0, 1, 2, 3, 4, 5, 6, 7 },
             { 7, 8, 0, 1, 2, 3, 4, 5, 6 },
@@ -178,6 +179,21 @@
             { 1, 2, 3, 4, 5, 6, 7, 8, 0 },
             { 0, 1, 2, 3, 4, 5, 6, 7, 8 }
         };
+
+        public static ReadOnlySpan<byte> DealOrder9x9 => _dealOrder; // length = 81
+        private static readonly byte[] _dealOrder =
+        {
+          8,0,1,2,3,4,5,6,7,
+          7,8,0,1,2,3,4,5,6,
+          6,7,8,0,1,2,3,4,5,
+          5,6,7,8,0,1,2,3,4,
+          4,5,6,7,8,0,1,2,3,
+          3,4,5,6,7,8,0,1,2,
+          2,3,4,5,6,7,8,0,1,
+          1,2,3,4,5,6,7,8,0,
+          0,1,2,3,4,5,6,7,8
+        };
+
 
         #endregion
 
