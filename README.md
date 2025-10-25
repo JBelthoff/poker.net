@@ -1,4 +1,5 @@
-# Poker Hand Evaluator (.NET Core Version)
+# Poker Hand Evaluator (.NET Core Version) | Version 2 - Improved!
+
 > High-performance .NET 8 poker hand evaluator and calculator built with ASP.NET Core Razor Pages.
 
 
@@ -13,7 +14,7 @@
 [![Docker](https://img.shields.io/badge/Containerized-Docker-blue?logo=docker)](https://www.docker.com/)
 
 
-A modern **ASP.NET Core (Razor Pages)** web app that evaluates **Texas Hold’em poker hands** using [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib), re-engineered for **.NET 8 performance**.
+A modern **ASP.NET Core (Razor Pages)** web app that evaluates **Texas Hold’em poker hands** based on [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib), completely re-engineered for **.NET 8 performance**.
 
 ---
 
@@ -152,15 +153,16 @@ within statistical noise of C++ speed.
 
 | Implementation               | Era / Toolchain           |             Evals/sec (M) | Comment                                                      |
 | ---------------------------- | ------------------------- | ------------------------: | ------------------------------------------------------------ |
-| **Cactus Kev’s C Evaluator** | 2000s C (VB6 / gcc -O2)** | ≈ 0.12 M 7-card evals/sec | Prime-product hash logic on which all modern ports are based |
+| **Cactus Kev’s C Evaluator** | 2000s C (VB6 / gcc -O2) | ≈ 0.12 M 7-card evals/sec | Prime-product hash logic on which all modern ports are based |
 
 ---
 
 ### Summary
 
-* **Version 1 → Version 2:** Over 9× end-to-end speed-up and complete GC elimination.
-* **Managed vs Native:** Modern C# implementation achieves **≈ 98 % of C++ throughput** for pure compute loops.
-* **Legacy to Modern:** Performance rose from ≈ 0.12 M to ≈ 2.76 B evaluations per second since Cactus Kev’s original.
+* **V1 → V2:** Over 9× end-to-end speed-up with zero GC allocations  
+* **Managed vs Native:** Modern C# achieves ≈ 98 % of C++ throughput on identical workloads  
+* **Legacy → Modern:** Performance rose from ≈ 0.12 M to ≈ 2.76 B evaluations per second since Cactus Kev’s original
+
 
 
 
@@ -260,7 +262,12 @@ PokerBenchmarks.FinalRiverBench-report.html
 
 Benchmark source files are located here:
 - `x_Benchmark/FinalRiverBench.cs`
+- `x_Benchmark/FiveCardBench.cs`
 - `x_Benchmark/Program.cs`
+
+Benchmark results files are here:
+- `x_Benchmark/ResultsAll.txt`
+- `x_Benchmark/BenchmarkDotNet.Artifacts`
 
 ---
 
@@ -282,8 +289,12 @@ Benchmark source files are located here:
 
 ---
 
+## Contact
+
 💼 Interested in performance engineering or .NET optimization work?  
 Contact me via [LinkedIn](https://www.linkedin.com/in/john-belthoff/) or visit [johnbelthoff.com](https://www.johnbelthoff.com/).  
   
+---
+
 © 2025 **John Belthoff**  
 [www.johnbelthoff.com](https://www.johnbelthoff.com/)
