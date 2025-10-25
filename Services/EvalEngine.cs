@@ -23,18 +23,20 @@ namespace poker.net.Services
         /// bestHands: List<List<Card>> (UI-sorted 5-card best hands).
         /// </returns>
         public static (ushort[] scores, int[] ranks, int[] bestIndexes, List<List<Card>> bestHands)
-    EvaluateRiverNinePlayers(IReadOnlyList<Card> deck, bool includeBestHands = false)
+            EvaluateRiverNinePlayers(IReadOnlyList<Card> deck, bool includeBestHands = false)
         {
             var scores = new ushort[9];
             var ranks = new int[9];
             var bestIndexes = new int[9];
             var bestHands = includeBestHands ? new List<List<Card>>(9) : new List<List<Card>>(0);
 
-            // Board VALUES once
+            // Hoist board VALUES once
             int b0 = deck[18].Value, b1 = deck[19].Value, b2 = deck[20].Value, b3 = deck[21].Value, b4 = deck[22].Value;
 
-            // Flattened 21x5 table (length 105)
-            var perm = PokerLib.Perm7Indices;
+            // 🔥 Hoist hot tables ONCE per showdown (ReadOnlySpan<ushort>)
+            var flushes = PokerLib.Flushes;
+            var unique5 = PokerLib.Unique5;
+            var hashes = PokerLib.HashValues;
 
             for (int p = 0; p < 9; p++)
             {
@@ -44,20 +46,13 @@ namespace poker.net.Services
                 sevenVals[1] = deck[p + 9].Value;   // hole 2
                 sevenVals[2] = b0; sevenVals[3] = b1; sevenVals[4] = b2; sevenVals[5] = b3; sevenVals[6] = b4;
 
-                // One-pass best-of-21 search on VALUES ONLY
+                // One-pass best-of-21 search on VALUES ONLY (allocation-free)
                 ushort bestScore = ushort.MaxValue;
                 int bestRow = 0;
 
                 for (int row = 0; row < 21; row++)
                 {
-                    int i = row * 5;
-                    ushort v = PokerLib.Eval5CardsFast(
-                        sevenVals[perm[i + 0]],
-                        sevenVals[perm[i + 1]],
-                        sevenVals[perm[i + 2]],
-                        sevenVals[perm[i + 3]],
-                        sevenVals[perm[i + 4]]
-                    );
+                    ushort v = EvalFiveFromPerm(sevenVals, row, flushes, unique5, hashes);
                     if (v < bestScore) { bestScore = v; bestRow = row; }
                 }
 
@@ -65,12 +60,35 @@ namespace poker.net.Services
                 ranks[p] = PokerLib.hand_rank_jb(bestScore);
                 bestIndexes[p] = bestRow;
 
-                // Only build/display hands when explicitly requested
                 if (includeBestHands)
                     bestHands.Add(BuildBest5FromDeck(deck, p, bestRow));
             }
 
             return (scores, ranks, bestIndexes, bestHands);
+        }
+
+        /// <summary>
+        /// Evaluates a 7-card set using a given permutation row index (allocation-free).
+        /// Tables are passed explicitly to avoid capturing ReadOnlySpan (ref struct) in closures.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ushort EvalFiveFromPerm(
+            ReadOnlySpan<int> sevenVals,
+            int permRow,
+            ReadOnlySpan<ushort> flushes,
+            ReadOnlySpan<ushort> unique5,
+            ReadOnlySpan<ushort> hashes)
+        {
+            var perm = PokerLib.Perm7Indices; // ReadOnlySpan<byte>; 21 rows × 5 cols (flattened)
+            int baseIdx = permRow * 5;
+
+            int v0 = sevenVals[perm[baseIdx + 0]];
+            int v1 = sevenVals[perm[baseIdx + 1]];
+            int v2 = sevenVals[perm[baseIdx + 2]];
+            int v3 = sevenVals[perm[baseIdx + 3]];
+            int v4 = sevenVals[perm[baseIdx + 4]];
+
+            return PokerLib.Eval5With(flushes, unique5, hashes, v0, v1, v2, v3, v4);
         }
 
         // Build the 5 UI cards directly from the deck and best perm row (no 7-card array needed)
@@ -107,7 +125,7 @@ namespace poker.net.Services
 
         /// <summary>
         /// Returns the perm7 row (0..20) of the best 5-card subhand from a 7-card set.
-        /// Reuses <paramref name="tmp5"/> to avoid allocations while iterating all 21 combinations.
+        /// Kept for parity with older call sites; avoids allocating by reading VALUES directly.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int GetBestOf7_NoAllocs(IReadOnlyList<Card> seven, Card[] tmp5 /* kept for signature parity */)
@@ -115,20 +133,19 @@ namespace poker.net.Services
             ushort best = ushort.MaxValue;
             int bestRow = 0;
 
-            var perm = PokerLib.Perm7.Indices; // ReadOnlySpan<byte>; 21 rows × 5 cols (flattened)
+            var perm = PokerLib.Perm7Indices; // ReadOnlySpan<byte>; 21 rows × 5 cols (flattened)
 
             for (int row = 0; row < 21; row++)
             {
                 int i = row * 5;
 
-                // Read the 5 card VALUES directly (no copying Card structs into tmp5)
+                // Read 5 VALUES directly
                 int v0 = seven[perm[i + 0]].Value;
                 int v1 = seven[perm[i + 1]].Value;
                 int v2 = seven[perm[i + 2]].Value;
                 int v3 = seven[perm[i + 3]].Value;
                 int v4 = seven[perm[i + 4]].Value;
 
-                // Hot-path 5-card evaluator (already inlined)
                 var score = PokerLib.eval_5cards_fast(v0, v1, v2, v3, v4);
                 if (score < best) { best = score; bestRow = row; }
             }
@@ -141,7 +158,7 @@ namespace poker.net.Services
         /// </summary>
         private static void FillBest5(IReadOnlyList<Card> seven, int row, Card[] dst5)
         {
-            var perm = PokerLib.Perm7.Indices;
+            var perm = PokerLib.Perm7Indices;
             int i = row * 5;
 
             dst5[0] = seven[perm[i + 0]];
@@ -152,9 +169,7 @@ namespace poker.net.Services
         }
 
         /// <summary>
-        /// Maps card face strings ("2"–"A") to their numeric rank values (2–14).
-        /// Used by <see cref="SortHand(System.Collections.Generic.IEnumerable{Card})"/> to create a consistent UI sort.
-        /// (Evaluation uses <c>PokerLib</c> scores — this map does not affect hand strength.)
+        /// Map faces for UI sort. (Evaluation uses scores; this is just display order.)
         /// </summary>
         private static readonly Dictionary<string, int> RankValue = new()
         {
@@ -177,7 +192,6 @@ namespace poker.net.Services
         /// Returns a new list of cards sorted for display:
         /// primary ascending by rank (2..A), with A treated as low in a wheel (A-2-3-4-5);
         /// secondary ascending by suit to keep a stable, readable order.
-        /// This is for UI only and does not influence evaluation.
         /// </summary>
         private static List<Card> SortHand(IEnumerable<Card> hand)
         {
@@ -192,12 +206,7 @@ namespace poker.net.Services
                 cards.Any(c => c.Face == "4") &&
                 cards.Any(c => c.Face == "5");
 
-            int key(Card c)
-            {
-                // In a wheel, treat Ace as rank 1 so it sorts to the front: A 2 3 4 5
-                if (isWheel && c.Face == "A") return 1;
-                return RankValue[c.Face];
-            }
+            int key(Card c) => (isWheel && c.Face == "A") ? 1 : RankValue[c.Face];
 
             return cards
                 .OrderBy(key)

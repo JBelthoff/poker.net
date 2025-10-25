@@ -45,22 +45,62 @@
 
         #region Methods
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static ushort eval_5cards_fast(int c1, int c2, int c3, int c4, int c5)
+        //{
+        //    uint q = (uint)(c1 | c2 | c3 | c4 | c5) >> 16;
+        //    ushort s;
+        //    if ((c1 & c2 & c3 & c4 & c5 & 0xf000) != 0) return flushes[q]; // check for flushes and straight flushes
+
+        //    s = unique5[q];// check for straights and high card hands
+        //    if ((s != 0)) return s;
+        //    return hash_values[find_fast((uint)((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff)))];
+        //}
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static ushort eval_5cards_fast(int c1, int c2, int c3, int c4, int c5)
         {
-            uint q = (uint)(c1 | c2 | c3 | c4 | c5) >> 16;
-            ushort s;
-            if ((c1 & c2 & c3 & c4 & c5 & 0xf000) != 0) return flushes[q]; // check for flushes and straight flushes
+            uint all = (uint)(c1 | c2 | c3 | c4 | c5);
+            uint q = all >> 16;
 
-            s = unique5[q];// check for straights and high card hands
-            if ((s != 0)) return s;
-            return hash_values[find_fast((uint)((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff)))];
+            // Flush / straight-flush
+            if (((uint)c1 & (uint)c2 & (uint)c3 & (uint)c4 & (uint)c5 & 0xF000u) != 0u)
+                return flushes[q];
+
+            ushort s = unique5[q]; // straight / high-card via bit pattern
+            if (s != 0) return s;
+
+            // prime-product path
+            uint p1 = (uint)(c1 & 0xFF);
+            uint p2 = (uint)(c2 & 0xFF);
+            uint p3 = (uint)(c3 & 0xFF);
+            uint p4 = (uint)(c4 & 0xFF);
+            uint p5 = (uint)(c5 & 0xFF);
+
+            uint key = unchecked(p1 * p2 * p3 * p4 * p5);
+            return hash_values[find_fast(key)];
         }
+
 
         public static ushort eval_5hand_fast_jb(List<Card> l)
         {
             return (eval_5cards_fast(l[0].Value, l[1].Value, l[2].Value, l[3].Value, l[4].Value));
         }
+
+        // New: span over VALUES (fastest when you already have ints)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort Eval5(ReadOnlySpan<int> v) =>
+            eval_5cards_fast(v[0], v[1], v[2], v[3], v[4]);
+
+        // New: five Cards by ref (no List<T> indexer / bounds cost)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort Eval5(in Card c0, in Card c1, in Card c2, in Card c3, in Card c4) =>
+            eval_5cards_fast(c0.Value, c1.Value, c2.Value, c3.Value, c4.Value);
+
+        // (Optional) Span over Cards when you naturally have them in a contiguous buffer
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort Eval5(ReadOnlySpan<Card> v) =>
+            eval_5cards_fast(v[0].Value, v[1].Value, v[2].Value, v[3].Value, v[4].Value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int hand_rank_jb(int value)
@@ -198,6 +238,38 @@
         #endregion
 
         #region Long Arrays
+
+        // Expose immutable, zero-copy views for hot tables
+        public static ReadOnlySpan<ushort> Flushes => flushes;
+        public static ReadOnlySpan<ushort> Unique5 => unique5;
+        public static ReadOnlySpan<ushort> HashValues => hash_values;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static ushort Eval5With(
+        ReadOnlySpan<ushort> flushes,
+        ReadOnlySpan<ushort> unique5,
+        ReadOnlySpan<ushort> hash_values,
+        int c1, int c2, int c3, int c4, int c5)
+            {
+                uint all = (uint)(c1 | c2 | c3 | c4 | c5);
+                uint q = all >> 16;
+
+                if (((uint)c1 & (uint)c2 & (uint)c3 & (uint)c4 & (uint)c5 & 0xF000u) != 0u)
+                    return flushes[(int)q];
+
+                ushort s = unique5[(int)q];
+                if (s != 0) return s;
+
+                uint p1 = (uint)(c1 & 0xFF);
+                uint p2 = (uint)(c2 & 0xFF);
+                uint p3 = (uint)(c3 & 0xFF);
+                uint p4 = (uint)(c4 & 0xFF);
+                uint p5 = (uint)(c5 & 0xFF);
+
+                uint key = unchecked(p1 * p2 * p3 * p4 * p5);
+                return hash_values[(int)find_fast(key)];
+            }
+
 
         #region Flushes
         private static readonly ushort[] flushes = new ushort[]{
