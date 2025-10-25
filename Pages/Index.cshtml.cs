@@ -127,23 +127,23 @@ namespace poker.net.Pages
 
         public async Task DoDeal()
         {
-            var bTest = false;
-            var SelectedWin = 12; // See GetFixedDeck() for values
+            var isTestMode = false;
+            const int SelectedWinIndex = 12; // See GetFixedDeck() for values
             var sourceDeck = await _deckService.RawDeckAsync();
 
-            if (!bTest)
+            if (!isTestMode)
             {
                 ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. sourceDeck]);
                 DeckHelper.Shuffle(ShuffledDeck);
                 Game.CardIds = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
                 if (_useSql && _db is not null)
-                {
                     Game = await _db.RecordNewGameAsync(Game, NetworkHelper.GetIPAddress(HttpContext));
-                }
+                else
+                    Game.GameID = Guid.NewGuid();
             }
             else
             {
-                Game.CardIds = GetFixedDeck(SelectedWin);
+                Game.CardIds = GetFixedDeck(SelectedWinIndex);
                 ShuffledDeck = GetShuffledDeck(sourceDeck, Game.CardIds);
             }
 
