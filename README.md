@@ -31,7 +31,7 @@ A working version of this application is available at:
 
 **This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine.**  
   
-It benchmarks over **100 million 7-card evaluations per second** using **BenchmarkDotNet**, written entirely in **pure C#** without lookup tables or unsafe code.  
+It benchmarks **≈ 178 million 5-card evaluations per second** using **BenchmarkDotNet**, written entirely in **pure C#** without lookup tables or unsafe code.  
   
 Ideal for developers studying **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
