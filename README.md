@@ -1,6 +1,7 @@
-# Poker Hand Evaluator (.NET Core Version) | Version 2 - Improved!
+# Poker Hand Evaluator (.NET Core Version)
+_Optimized for .NET 8 and 9 using modern C# performance engineering_
 
-> High-performance .NET 8 poker hand evaluator and calculator built with ASP.NET Core Razor Pages.
+> A high-performance Texas Hold’em Poker Hand Evaluator built with **ASP.NET Core Razor Pages**,  faithfully based on [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib)  and completely re-engineered in **pure, allocation-free C#**.
 
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://poker-calculator.johnbelthoff.com/)
@@ -14,7 +15,9 @@
 [![Docker](https://img.shields.io/badge/Containerized-Docker-blue?logo=docker)](https://www.docker.com/)
 
 
-A modern **ASP.NET Core (Razor Pages)** web app that evaluates **Texas Hold’em poker hands** based on [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib), completely re-engineered for **.NET 8 performance**.
+A modern **.NET 8/9 implementation** of the legendary [**Cactus Kev Poker Evaluator**](https://github.com/suffecool/pokerlib), rebuilt from the ground up for clarity, determinism, and speed.  
+  
+This version achieves **near-native C++ performance** through careful algorithmic refactoring, zero memory allocations, and extensive BenchmarkDotNet validation.
 
 ---
 
@@ -29,11 +32,11 @@ A working version of this application is available at:
 
 ---
 
-**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine.**  
-  
-It benchmarks **≈ 178 million 5-card evaluations per second** using **BenchmarkDotNet**, written entirely in **pure C#** without lookup tables or unsafe code.  
-  
-Ideal for developers studying **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
+**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**,  
+benchmarking **≈178 million 5-card evaluations per second** in **pure C#**, without lookup tables or unsafe code.  
+
+Ideal for developers exploring **algorithmic optimization**, **combinatorial evaluation**,  
+or **.NET performance engineering**.
 
 
 
@@ -61,12 +64,13 @@ Future updates will continue refining gameplay and introduce interactive feature
 hand histories, betting logic, and visualized probability analysis.
 
 
-
-
-
-
-
 ---
+
+
+
+
+
+
 
 ## ⚙️ Quick Start
 
@@ -104,22 +108,33 @@ dotnet run
 
 ## ⚡ Performance
 
+
 ### Version Notes
 
-Benchmarks were measured with **BenchmarkDotNet v0.15.4** on **.NET 8.0.21**,
-running **Windows 10 (22H2)** on an **Intel Core i9-9940X (14 cores / 28 threads)**
-under the *High Performance* power plan.
+Benchmarks were measured with **BenchmarkDotNet v0.15.4** on **.NET 8.0.21**, running **Windows 10 (22H2)** on an **Intel Core i9-9940X (14 cores / 28 threads)** under the *High Performance* power plan.
 
-Both **.NET 8** and **.NET 9** produce statistically identical results,
-confirming consistent JIT and runtime behavior across LTS and preview builds.
+This release introduces extensive performance optimizations, including **Span-based memory reuse**, **tightened hot-path loops**, and **complete allocation elimination**, achieving throughput within **≈ 98 % of native C++ performance**.
 
-The **Optimization Branch (Version 2)** introduced Span-based memory reuse, tighter hot-path loops,
-and complete allocation elimination, achieving performance within **≈ 98 % of native C++**.
+C++ reference benchmarks were conducted using [**bwedding/PokerEvalMultiThread**](https://github.com/bwedding/PokerEvalMultiThread), an optimized multithreaded port of [**Suffecool’s original pokerlib**](https://github.com/suffecool/pokerlib).  
+  
+Both implementations produced identical deterministic checksums, confirming algorithmic parity.
+  
 An upgrade to **.NET 10** is planned upon its release.
+
+
+
+
 
 ---
 
-### Master Branch (Version 1) — Raw Numbers
+
+
+
+
+
+
+
+### Legacy Baseline (Version 1)
 
 | Benchmark                              | Mean (µs/op) | Alloc/op | Derived 5-card Evals/sec (≈) |
 | -------------------------------------- | -----------: | -------: | ---------------------------: |
@@ -130,49 +145,81 @@ An upgrade to **.NET 10** is planned upon its release.
 
 ---
 
-### Optimization Branch (Version 2) vs Master (Version 1)
+### Current Release (Version 2) vs Legacy (Version 1)
 
-| Benchmark                              | Mean (µs/op) |    Derived Evals/sec (≈) |          Δ vs Master (%) | Notes                                     |
-| -------------------------------------- | -----------: | -----------------------: | -----------------------: | ----------------------------------------- |
-| **End-to-End (EvalEngine)**            |     1.066 µs | ≈ 940 M 5-card evals/sec |        **+927 % faster** | Major hot-path refactor, zero allocations |
-| **Engine-only (7 → 21)**               |     1.376 µs | ≈ 145 M 5-card evals/sec |         **+27 % faster** | Loop unrolling + `Span<T>` reuse          |
-| **FinalRiver (Parallel, values-only)** |            — |   **≈ 2.76 B hands/sec** | **≈ 13× faster overall** | Flattened Perm7, allocation-free          |
+| Benchmark                              | Mean (µs/op) |    Derived Evals/sec (≈) |        Δ vs V1 (%) | Notes                                     |
+| -------------------------------------- | -----------: | -----------------------: | -----------------: | ----------------------------------------- |
+| **End-to-End (EvalEngine)**            |     1.066 µs |   ≈ 177–178 M / sec      | **+925 % (×10.25)** | Major hot-path refactor, zero allocations |
+| **Engine-only (7 → 21)**               |     1.376 µs |        ≈ 137 M / sec     |   **+19 % (×1.19)** | Loop unrolling + `Span<T>` reuse          |
+| **FinalRiver (Parallel, values-only)** |            — |     **≈ 2.76 B / sec**   |          —          | Parallel throughput; not directly comparable to per-op means |
 
-The Optimization Branch brought the managed engine from hundreds of millions
-to **billions of evaluations per second**, closing the gap with native C.
-
----
-
-### Optimization Branch (Version 2) vs Native C++
-
-| Implementation                        | Toolchain                    | Runtime (s) / 10 M hands | Hands/sec (B) | % of C Speed |
-| ------------------------------------- | ---------------------------- | -----------------------: | ------------: | -----------: |
-| **Native C++ (bwedding / Suffecool)** | MSVC 19.44 / O2 + AVX2       |                 ≈ 1.25 s |        2.80 B |        100 % |
-| **.NET 8 Optimized (V2)**             | RyuJIT TieredPGO + Server GC |                 ≈ 1.27 s |        2.76 B |   **≈ 98 %** |
-
-Both implementations produced identical deterministic checksums,
-confirming algorithmic parity. The managed version now performs
-within statistical noise of C++ speed.  
-  
-> **Note:** Results reflect this specific compute-bound algorithm (poker hand evaluation)  
-> under identical logic and workload; not a general .NET vs C++ comparison.
-
+This release elevated the managed evaluator from hundreds of millions to **billions of evaluations per second**, effectively closing the gap with native C++.
 
 ---
 
-### Historical Reference — Original Cactus Kev
 
-| Implementation               | Era / Toolchain           |             Evals/sec (M) | Comment                                                      |
-| ---------------------------- | ------------------------- | ------------------------: | ------------------------------------------------------------ |
-| **Cactus Kev’s C Evaluator** | 2000s C (VB6 / gcc -O2) | ≈ 0.12 M 7-card evals/sec | Prime-product hash logic on which all modern ports are based |
+
+
+
+
+### Current Version (C#) vs Native C++
+
+> **Workload:** five-card evaluation throughput (values-only).  
+> **Note:** One full 9-player river evaluation performs **189** five-card evaluations.
+
+| Implementation                         | Environment (from logs)                                               | Five-card evals/sec (B) | % of C++ |
+|---------------------------------------|------------------------------------------------------------------------|------------------------:|---------:|
+| **Native C++ (bwedding / Suffecool)** | MSVC 19.44 /O2 + AVX2, 64-bit build (bwedding/PokerEvalMultiThread)   | **≈ 2.8227 B**          | 100 %    |
+| **.NET 8 Optimized (Current)**        | .NET 8.0.21 • X64 RyuJIT • GC = Concurrent Workstation                 | **≈ 2.78 – 2.79 B**     | ≈ 98–99 % |
+
+**Evidence**
+
+- **C++** run: “Hands per second: 2822698675” → **2.8227 B hands/sec**.  
+- **C#** BenchmarkDotNet: Mean = 678,110,150 ns for N = 10,000,000 9-player river evals (values-only).  
+  - 10 M × 189 five-card evals ÷ 0.678110 s = **≈ 2.79 B five-card evals/sec**.  
+- Environment block confirms “.NET 8.0.21 (64-bit) / RyuJIT / GC = Concurrent Workstation”.
+
+Both implementations produced identical deterministic checksums, confirming algorithmic parity.  
+The managed version performs within **statistical noise** of the native C++ evaluator.
+
+
+
+
+
+---
+
+
+
+
+### Historical Reference — Original C (Suffecool) — Single-Thread Baselines
+
+| Benchmark                                 | Hands Tested | Time (s) | Hands/sec (M) | ns / hand | Comment |
+|-------------------------------------------|-------------:|---------:|--------------:|----------:|---------|
+| **5-Card Random (bench5.exe)**            |   10,000,000 |   0.278223 | **35.94**     | 27.822 ns | Original C evaluator (single-thread) |
+| **7-Card Random (bench7.exe)**            |   10,000,000 |   1.179530 | **8.48**      | 117.953 ns | Original C evaluator (single-thread) |
+| **All 5-Card Combos (allfive.exe)**       |    2,598,960 |   0.0130   | **199.92**    | 5.002 ns  | Full enumeration of all 2,598,960 5-card hands |
+
+> Source: `x_Benchmark/ResultsAll.txt` — single-thread C baselines using **original Suffecool pokerlib** (https://github.com/suffecool/pokerlib).
+
+
+
+
+
 
 ---
 
 ### Summary
 
-* **V1 → V2:** Over 9× end-to-end speed-up with zero GC allocations  
-* **Managed vs Native:** Modern C# achieves ≈ 98 % of C++ throughput on identical workloads  
-* **Legacy → Modern:** Performance rose from ≈ 0.12 M to ≈ 2.76 B evaluations per second since Cactus Kev’s original
+- **V1 → V2 (C# only, same workload):** ≈ **10.25×** end-to-end speed-up (**+925%**, −90.24% mean time) with **zero GC allocations**.
+- **Managed vs Native (same workload):** Modern C# achieves **≈98–99%** of C++ throughput on the **five-card values-only** test.
+- **Legacy baselines (single-thread C):** 
+  - **5-card random:** ≈ **35.9 M** hands/sec  
+  - **7-card random:** ≈ **8.48 M** hands/sec
+- **Modern C# throughput (current):**
+  - **Derived five-card (single-thread):** ≈ **177–178 M** evals/sec (from end-to-end 9-player)  
+  - **Five-card (parallel, values-only):** ≈ **2.76–2.79 B** evals/sec
+
+
 
 
 
