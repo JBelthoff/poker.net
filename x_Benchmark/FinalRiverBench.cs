@@ -1,4 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnosers;
 using poker.net.Interfaces;
 using poker.net.Models;    // Card
 using poker.net.Services;  // StaticDeckService / SqlDeckService, PokerLib, EvalEngine
@@ -6,6 +7,7 @@ using poker.net.Services;  // StaticDeckService / SqlDeckService, PokerLib, Eval
 namespace PokerBenchmarks
 {
     [MemoryDiagnoser]
+    
     public class FinalRiverBench
     {
         // Allow DI but also work out-of-the-box for BenchmarkDotNet
@@ -16,6 +18,11 @@ namespace PokerBenchmarks
         // Add more CardIds via [Params(..., ...)] if you want to average across different boards.
         [Params(
             "6|27|12|18|16|8|37|23|9|22|42|19|2|48|47|26|11|41|20|17|44|51|33|28|7|30|34|13|29|31|52|21|24|14|10|46|1|4|32|25|35|15|39|43|49|3|50|5|38|45|36|40"
+
+            //"46|50|20|25|12|42|36|5|43|2|26|33|13|8|31|16|4|35|45|11|22|10|21|24|41|37|30|18|27|15|40|34|19|52|44|7|39|48|23|1|47|38|51|3|9|32|49|6|14|29|28|17",
+            //"17|21|46|27|32|31|38|19|26|9|1|52|42|51|4|18|39|35|34|41|43|33|29|30|49|28|2|14|20|37|25|8|7|11|40|6|15|50|12|5|47|16|44|36|13|48|3|24|22|10|23|45",
+            //"7|48|34|27|10|6|31|4|16|20|18|45|33|49|50|32|19|35|2|40|51|43|22|26|11|42|38|14|9|17|36|25|24|28|52|30|41|21|15|1|3|12|44|46|5|37|29|39|8|23|13|47",
+            //"38|39|43|23|12|31|36|15|28|18|44|4|11|5|13|25|32|22|41|3|33|37|24|26|10|8|30|17|16|7|40|20|2|27|52|1|46|9|48|14|50|29|42|35|47|49|21|19|34|45|51|6"
         )]
         public string CardIds { get; set; } = string.Empty;
 
@@ -47,7 +54,8 @@ namespace PokerBenchmarks
             return min;
         }
 
-        // (Optional) apples-to-apples: low-level loop using PokerLib directly.
+
+        //// (Optional) apples-to-apples: low-level loop using PokerLib directly.
         [Benchmark(Description = "Engine-only: 9 × (7-card → best-of-21)")]
         public int EngineOnly_SevenCardBestOf21_9Players()
         {
@@ -98,6 +106,7 @@ namespace PokerBenchmarks
 
             return acc;
         }
+
 
         [Benchmark(Description = "Engine-only: values-only, flattened Perm7, no allocs")]
         public int EngineOnly_SevenCardBestOf21_9Players_ValuesOnly_NoAllocs()
@@ -162,24 +171,23 @@ namespace PokerBenchmarks
         [Params(10_000_000)]
         public int N;
 
-        // CHAMPION throughput benchmark: minimal overhead, values-only, no allocations on hot path.
-        [Benchmark(Description = "Throughput: Parallel 9-player evals (values-only, flattened Perm7)")]
+        
+        //CHAMPION throughput benchmark: minimal overhead, values-only, no allocations on hot path.
+       [Benchmark(Description = "Throughput: Parallel 9-player evals (values-only, flattened Perm7)")]
         public int Parallel_Throughput_ValuesOnly()
         {
             int b0 = _shuffled[18].Value, b1 = _shuffled[19].Value, b2 = _shuffled[20].Value,
                 b3 = _shuffled[21].Value, b4 = _shuffled[22].Value;
 
-            int global = 0;
+            // Hoist once; give each worker a stable array (no Span capture issues).
+            var perm = PokerLib.Perm7Indices.ToArray();
 
+            int global = 0;
             Parallel.For(0, N,
-                () => 0, // thread-local init
+                () => 0,
                 (iter, _, local) =>
                 {
-                    // Span lives inside the lambda; safe and fast.
-                    var perm = PokerLib.Perm7Indices; // flattened 21×5
-
                     int sum = 0;
-
                     for (int p = 0; p < 9; p++)
                     {
                         Span<int> sevenVals = stackalloc int[7];
@@ -188,7 +196,6 @@ namespace PokerBenchmarks
                         sevenVals[2] = b0; sevenVals[3] = b1; sevenVals[4] = b2; sevenVals[5] = b3; sevenVals[6] = b4;
 
                         ushort best = ushort.MaxValue;
-
                         for (int row = 0; row < 21; row++)
                         {
                             int i = row * 5;
@@ -197,21 +204,30 @@ namespace PokerBenchmarks
                                 sevenVals[perm[i + 1]],
                                 sevenVals[perm[i + 2]],
                                 sevenVals[perm[i + 3]],
-                                sevenVals[perm[i + 4]]
-                            );
+                                sevenVals[perm[i + 4]]);
                             if (v < best) best = v;
                         }
-
                         sum += best;
                     }
-
                     return local + sum;
                 },
-                local => Interlocked.Add(ref global, local)
-            );
-
+                local => Interlocked.Add(ref global, local));
             return global;
         }
+
+
+        [Benchmark(Description = "Micro: Eval5CardsFast tight loop")]
+        public int Micro_Eval5CardsFast()
+        {
+            int acc = 0;
+            var v = new[] { _shuffled[0].Value, _shuffled[1].Value, _shuffled[18].Value, _shuffled[19].Value, _shuffled[20].Value };
+            for (int i = 0; i < 1_000_000; i++)
+            {
+                acc ^= PokerLib.Eval5CardsFast(v[(i + 0) % 5], v[(i + 1) % 5], v[(i + 2) % 5], v[(i + 3) % 5], v[(i + 4) % 5]);
+            }
+            return acc;
+        }
+
 
         [Params(64)] // optional second throughput for comparison; try 32/64/128
         public int Batch;
