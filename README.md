@@ -1,5 +1,5 @@
 # Poker Hand Evaluator (.NET Core Version)
-_Optimized for .NET 8 and 9 using modern C# performance engineering_
+_Version 2.0 - Optimized for .NET 8 and 9 using modern C# performance engineering_
 
 > A high-performance Texas Hold’em Poker Hand Evaluator built with **ASP.NET Core Razor Pages**,  faithfully based on [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib)  and completely re-engineered in **pure, allocation-free C#**.
 
@@ -32,22 +32,18 @@ A working version of this application is available at:
 
 ---
 
-**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**,  
-benchmarking **≈178 million 5-card evaluations per second** in **pure C#**, without lookup tables or unsafe code.  
+**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, benchmarking **≈178 million 5-card evaluations per second** in **pure C#**, without lookup tables or unsafe code.  
 
-Ideal for developers exploring **algorithmic optimization**, **combinatorial evaluation**,  
-or **.NET performance engineering**.
+Ideal for developers exploring **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
 
 
 
 ## About the Project
 
-This project re-creates the logic and structure of a full **Texas Hold’em Poker** game —  
-from shuffling and dealing cards to evaluating hands and determining the winner.
+This project re-creates the logic and structure of a full **Texas Hold’em Poker** game — from shuffling and dealing cards to evaluating hands and determining the winner.
 
-The application is written in **ASP.NET Core (C#)** and uses a modern C# port of  
-[Cactus Kev’s Poker Hand Evaluator](https://poker-calculator.johnbelthoff.com/cactus_kev), the classic C implementation that popularized prime-number-based hand ranking.
+The application is written in **ASP.NET Core (C#)** and uses a modern C# port of [Cactus Kev’s Poker Hand Evaluator](https://poker-calculator.johnbelthoff.com/cactus_kev), the classic C implementation that popularized prime-number-based hand ranking.
 
 At this stage, the app:
 
@@ -56,12 +52,9 @@ At this stage, the app:
 - **Calculates the winning hand**
 - **Displays detailed results**
 
-Under the hood, the evaluation engine performs about **≈ 178 million 5-card evaluations per second (single-threaded)**  
-and scales up to **≈ 2.76 billion hands per second (multi-threaded)** —  
-placing it within **≈ 98 % of an AVX2-optimized C++ implementation** while preserving fully managed, allocation-free execution.
+Under the hood, the evaluation engine performs about **≈ 178 million 5-card evaluations per second (single-threaded)** and scales up to **≈ 2.76 billion hands per second (multi-threaded)** —  placing it within **≈ 98 % of an AVX2-optimized C++ implementation** while preserving fully managed, allocation-free execution.
 
-Future updates will continue refining gameplay and introduce interactive features such as  
-hand histories, betting logic, and visualized probability analysis.
+Future updates will continue refining gameplay and introduce interactive features such as hand histories, betting logic, and visualized probability analysis.
 
 
 ---
