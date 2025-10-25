@@ -221,7 +221,8 @@ namespace poker.net.Pages
             }
 
             // 2) Evaluate all nine players via the new EvalEngine
-            var (scores, ranks, bestIdx, best5sSorted) = EvalEngine.EvaluateRiverNinePlayers(ShuffledDeck);
+            var (scores, ranks, bestIdx, best5sSorted) =
+                EvalEngine.EvaluateRiverNinePlayers(ShuffledDeck, includeBestHands: true);
 
             // 3) Push results into existing fields (for the view)
             for (int i = 0; i < 9; i++)

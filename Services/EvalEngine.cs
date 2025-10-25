@@ -23,43 +23,86 @@ namespace poker.net.Services
         /// bestHands: List<List<Card>> (UI-sorted 5-card best hands).
         /// </returns>
         public static (ushort[] scores, int[] ranks, int[] bestIndexes, List<List<Card>> bestHands)
-            EvaluateRiverNinePlayers(IReadOnlyList<Card> deck)
+    EvaluateRiverNinePlayers(IReadOnlyList<Card> deck, bool includeBestHands = false)
         {
             var scores = new ushort[9];
             var ranks = new int[9];
             var bestIndexes = new int[9];
-            var bestHands = new List<List<Card>>(9);
+            var bestHands = includeBestHands ? new List<List<Card>>(9) : new List<List<Card>>(0);
 
-            // Reuse local buffers to minimize allocations
-            var seven = new Card[7];
-            var tmp5 = new Card[5];
+            // Board VALUES once
+            int b0 = deck[18].Value, b1 = deck[19].Value, b2 = deck[20].Value, b3 = deck[21].Value, b4 = deck[22].Value;
+
+            // Flattened 21x5 table (length 105)
+            var perm = PokerLib.Perm7Indices;
 
             for (int p = 0; p < 9; p++)
             {
-                // Build this player's 7-card set: 2 hole + 5 community
-                seven[0] = deck[p];        // hole 1
-                seven[1] = deck[p + 9];    // hole 2
-                for (int x = 0; x < 5; x++)
-                    seven[x + 2] = deck[18 + x]; // community cards
+                // 7 VALUES for this player (stack-allocated, no GC)
+                Span<int> sevenVals = stackalloc int[7];
+                sevenVals[0] = deck[p].Value;       // hole 1
+                sevenVals[1] = deck[p + 9].Value;   // hole 2
+                sevenVals[2] = b0; sevenVals[3] = b1; sevenVals[4] = b2; sevenVals[5] = b3; sevenVals[6] = b4;
 
-                // Best-of-21 5-card combinations (perm7 rows 0..20)
-                bestIndexes[p] = GetBestOf7_NoAllocs(seven, tmp5);
+                // One-pass best-of-21 search on VALUES ONLY
+                ushort bestScore = ushort.MaxValue;
+                int bestRow = 0;
 
-                // Copy the winning 5 cards into tmp5 (for eval + display)
-                FillBest5(seven, bestIndexes[p], tmp5);
+                for (int row = 0; row < 21; row++)
+                {
+                    int i = row * 5;
+                    ushort v = PokerLib.Eval5CardsFast(
+                        sevenVals[perm[i + 0]],
+                        sevenVals[perm[i + 1]],
+                        sevenVals[perm[i + 2]],
+                        sevenVals[perm[i + 3]],
+                        sevenVals[perm[i + 4]]
+                    );
+                    if (v < bestScore) { bestScore = v; bestRow = row; }
+                }
 
-                // Fast evaluator on 5 values (no List allocations)
-                scores[p] = PokerLib.eval_5cards_fast(
-                    tmp5[0].Value, tmp5[1].Value, tmp5[2].Value, tmp5[3].Value, tmp5[4].Value);
+                scores[p] = bestScore;
+                ranks[p] = PokerLib.hand_rank_jb(bestScore);
+                bestIndexes[p] = bestRow;
 
-                // Rank bucket (1..9): 1=Straight Flush .. 9=High Card
-                ranks[p] = PokerLib.hand_rank_jb(scores[p]);
-
-                // UI only: add a sorted copy for display
-                bestHands.Add(SortHand(tmp5));
+                // Only build/display hands when explicitly requested
+                if (includeBestHands)
+                    bestHands.Add(BuildBest5FromDeck(deck, p, bestRow));
             }
 
             return (scores, ranks, bestIndexes, bestHands);
+        }
+
+        // Build the 5 UI cards directly from the deck and best perm row (no 7-card array needed)
+        private static List<Card> BuildBest5FromDeck(IReadOnlyList<Card> deck, int playerIndex, int bestRow)
+        {
+            var perm = PokerLib.Perm7Indices;
+            int baseIdx = bestRow * 5;
+
+            // Map Perm7's 7-slot indices back to deck positions: 0=p, 1=p+9, 2..6=board 18..22
+            static Card Pick(IReadOnlyList<Card> d, int p, int sevenIdx) => sevenIdx switch
+            {
+                0 => d[p],
+                1 => d[p + 9],
+                2 => d[18],
+                3 => d[19],
+                4 => d[20],
+                5 => d[21],
+                6 => d[22],
+                _ => throw new ArgumentOutOfRangeException(nameof(sevenIdx))
+            };
+
+            var best5 = new List<Card>(5)
+            {
+                Pick(deck, playerIndex, perm[baseIdx + 0]),
+                Pick(deck, playerIndex, perm[baseIdx + 1]),
+                Pick(deck, playerIndex, perm[baseIdx + 2]),
+                Pick(deck, playerIndex, perm[baseIdx + 3]),
+                Pick(deck, playerIndex, perm[baseIdx + 4]),
+            };
+
+            // Reuse your existing SortHand for UI consistency (kept out of hot path)
+            return SortHand(best5);
         }
 
         /// <summary>

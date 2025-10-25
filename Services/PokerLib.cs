@@ -2221,6 +2221,7 @@
 
         #endregion
 
+        public static ReadOnlySpan<byte> Perm7Indices => Perm7.Indices;
         internal static class Perm7
         {
             // Private backing store: one-time allocation at startup.
@@ -2253,4 +2254,6 @@
             internal static ReadOnlySpan<byte> Indices => _indices;
         }
     }
+
+
 }
