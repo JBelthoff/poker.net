@@ -278,8 +278,9 @@ To reproduce the same performance results using **BenchmarkDotNet**, follow thes
 3. **Replace `Program.cs`**  
    - Delete the default `Program.cs` created by Visual Studio.  
    - Right-click **PokerBenchmarks** → **Add → Existing Item**  
-   - Add the two files from `poker.net/x_Benchmark` and confirm overwrites:  
+   - Add the three files from `poker.net/x_Benchmark` and confirm overwrites:  
      - `FinalRiverBench.cs`  
+     - `FiveCardBench.cs`  
      - `Program.cs`
 
 4. **Add a Project Reference**  
