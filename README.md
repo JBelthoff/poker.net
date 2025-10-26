@@ -196,25 +196,24 @@ The managed version performs within **statistical noise** of the native C++ eval
 
 
 
-### for test
+**Latest Benchmark Results**
 
-```
-
-BenchmarkDotNet v0.15.4, Windows 10 (10.0.19045.6456/22H2/2022Update)
-Intel Core i9-9940X CPU 3.30GHz, 1 CPU, 28 logical and 14 physical cores
+```text
+BenchmarkDotNet v0.15.4, Windows 10 (10.0.19045.6456 / 22H2 / 2022 Update)
+Intel Core i9-9940X CPU 3.30 GHz (14 cores / 28 threads)
 .NET SDK 10.0.100-rc.2.25502.107
-  [Host]     : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
-  DefaultJob : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
-
-
+[Host]      : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+DefaultJob  : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
 ```
-| Method                                                                     | N        | Batch | CardIds             | Mean             | Error            | StdDev          | Gen0   | Allocated |
-|--------------------------------------------------------------------------- |--------- |------ |-------------------- |-----------------:|-----------------:|----------------:|-------:|----------:|
-| &#39;Full 9-player showdown: complete evaluation including setup and scoring&#39;  | 10000000 | 64    | 30|8(...)9|50 [146] |       1,043.6 ns |          6.02 ns |         5.63 ns | 0.0191 |     208 B |
-| &#39;Core evaluator: 9 players × 21 combos each (best 5 of 7 cards)&#39;           | 10000000 | 64    | 30|8(...)9|50 [146] |       1,375.3 ns |          1.86 ns |         1.55 ns | 0.0877 |     888 B |
-| &#39;Optimized core evaluator: values-only, zero allocations (max throughput)&#39; | 10000000 | 64    | 30|8(...)9|50 [146] |         904.3 ns |          0.36 ns |         0.32 ns |      - |         - |
-| &#39;Full 9-player evaluation + best-hand reconstruction (UI-ready output)&#39;    | 10000000 | 64    | 30|8(...)9|50 [146] |       5,431.2 ns |          4.20 ns |         3.73 ns | 0.8926 |    8984 B |
-| &#39;Throughput: Parallel.For batched (values-only)&#39;                           | 10000000 | 64    | 30|8(...)9|50 [146] | 676,595,521.4 ns | 10,807,032.18 ns | 9,580,152.54 ns |      - |   11232 B |
+
+| Method                                                                   |          N | Batch |              CardIds |             Mean |            Error |          StdDev |   Gen0 | Allocated |
+| ------------------------------------------------------------------------ | ---------: | ----: | -------------------: | ---------------: | ---------------: | --------------: | -----: | --------: |
+| Full 9-player showdown: complete evaluation including setup and scoring  | 10,000,000 |    64 | 30|8(... )9|50 [146] |       1,043.6 ns |          6.02 ns |         5.63 ns | 0.0191 |     208 B |
+| Core evaluator: 9 players × 21 combos each (best 5 of 7 cards)           | 10,000,000 |    64 | 30|8(... )9|50 [146] |       1,375.3 ns |          1.86 ns |         1.55 ns | 0.0877 |     888 B |
+| Optimized core evaluator: values-only, zero allocations (max throughput) | 10,000,000 |    64 | 30|8(... )9|50 [146] |         904.3 ns |          0.36 ns |         0.32 ns |      – |         – |
+| Full 9-player evaluation + best-hand reconstruction (UI-ready output)    | 10,000,000 |    64 | 30|8(... )9|50 [146] |       5,431.2 ns |          4.20 ns |         3.73 ns | 0.8926 |   8,984 B |
+| Throughput: Parallel.For batched (values-only)                           | 10,000,000 |    64 | 30|8(... )9|50 [146] | 676,595,521.4 ns | 10,807,032.18 ns | 9,580,152.54 ns |      – |  11,232 B |
+
 
 
 
