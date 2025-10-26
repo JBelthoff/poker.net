@@ -7,7 +7,6 @@ namespace PokerBenchmarks
         public static void Main(string[] args)
         {
             BenchmarkRunner.Run<FinalRiverBench>();
-            //BenchmarkRunner.Run<FiveCardBench>();
         }
     }
 }
