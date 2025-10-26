@@ -194,9 +194,11 @@ The managed version performs within **statistical noise** of the native C++ eval
 
 > Source: `x_Benchmark/ResultsAll.txt` — single-thread C baselines using **original Suffecool pokerlib** (https://github.com/suffecool/pokerlib).
 
-
+---
 
 **Latest Benchmark Results**
+
+
 
 ```text
 BenchmarkDotNet v0.15.4, Windows 10 (10.0.19045.6456 / 22H2 / 2022 Update)
@@ -213,6 +215,7 @@ DefaultJob  : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
 | Optimized core evaluator: values-only, zero allocations (max throughput) | 10,000,000 |    64 | 30|8(... )9|50 [146] |         904.3 ns |          0.36 ns |         0.32 ns |      – |         – |
 | Full 9-player evaluation + best-hand reconstruction (UI-ready output)    | 10,000,000 |    64 | 30|8(... )9|50 [146] |       5,431.2 ns |          4.20 ns |         3.73 ns | 0.8926 |   8,984 B |
 | Throughput: Parallel.For batched (values-only)                           | 10,000,000 |    64 | 30|8(... )9|50 [146] | 676,595,521.4 ns | 10,807,032.18 ns | 9,580,152.54 ns |      – |  11,232 B |
+
 
 
 
