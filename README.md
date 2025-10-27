@@ -1,3 +1,10 @@
+> ⚡ **Important:**  
+> The latest and most optimized version of this project is on the  
+> 👉 **[`optimization`](https://github.com/JBelthoff/poker.net/tree/optimization)** branch.  
+> Use that branch for all performance benchmarks.
+
+---
+
 # Poker Hand Evaluator (.NET Core Version)
 > High-performance .NET 8 poker hand evaluator and calculator built with ASP.NET Core Razor Pages.
 
