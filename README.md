@@ -1,5 +1,5 @@
 # Poker Hand Evaluator (.NET Core Version)
-_**Version 2.0** - Optimized for .NET 8 and 9 using modern C# performance engineering_
+_**Version 2.0** - Optimized for .NET 8 and 9 using modern C# performance engineering_ 
 
 > A high-performance Texas Hold’em Poker Hand Evaluator built with **ASP.NET Core Razor Pages**,  faithfully based on [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib)  and completely re-engineered in **pure, allocation-free C#**.
 
