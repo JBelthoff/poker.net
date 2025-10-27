@@ -22,7 +22,7 @@ namespace poker.net.Pages
 
         public int[] r { get; set; }
 
-        public int[] iWinIndex { get; set; }
+        //public int[] iWinIndex { get; set; }
 
         public bool ShowShufflePanel { get; set; }
 
@@ -43,7 +43,7 @@ namespace poker.net.Pages
 
         public List<Card> ShuffledDeck { get; set; } = new();
 
-        public List<List<Card>> lPlayerHands = new();
+        //public List<List<Card>> lPlayerHands = new();
 
         public List<List<Card>> lWinners = new();
 
@@ -206,7 +206,7 @@ namespace poker.net.Pages
         public async Task DoRiver()
         {
             // --- Reset per-run state that feeds the UI ---
-            lPlayerHands.Clear();         // legacy: not used by the array evaluator, but keep cleared for UI
+            //lPlayerHands.Clear();         // legacy: not used by the array evaluator, but keep cleared for UI
             lWinners.Clear();             // we'll rebuild this from the array results below
             h = new int[9];               // per-player raw scores (lower is better)
             r = new int[9];               // per-player rank category (1 = Straight Flush ... 9 = High Card)
@@ -239,9 +239,8 @@ namespace poker.net.Pages
             // Returns:
             //  - scores   : ushort[9] raw evaluator scores (lower = stronger hand)
             //  - ranks    : int[9] rank categories (1..9) for display like "Straight", "Flush", etc.
-            //  - bestIdx  : int winner index 0..8
             //  - bestHands: Card[9][] where bestHands[i] is the sorted 5-card best hand for player i (or null)
-            var (scores, ranks, bestIdx, bestHandsArr) =
+            var (scores, ranks, bestHandsArr) =
                 EvalEngine.EvaluateRiverNinePlayersArrays(deckArr, includeBestHands: true);
 
             // --- 3) Rehydrate lWinners for the view (List<List<Card>>) and sort each hand for stable display ---
@@ -266,7 +265,7 @@ namespace poker.net.Pages
                 r[i] = ranks[i];
             }
 
-            iWinIndex = bestIdx;
+            //iWinIndex = bestIdx;
 
             // Lowest score is the winning hand value (for your existing UI).
             iWinValue = scores.Min();

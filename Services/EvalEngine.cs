@@ -129,7 +129,7 @@ namespace poker.net.Services
         /// UI Is using this!
         /// 
         /// </summary>
-        public static (ushort[] scores, int[] ranks, int[] bestIndexes, Card[][] bestHands)
+        public static (ushort[] scores, int[] ranks, Card[][] bestHands)
             EvaluateRiverNinePlayersArrays(Card[] deck, bool includeBestHands = false)
         {
             if (deck is null) throw new ArgumentNullException(nameof(deck));
@@ -137,7 +137,7 @@ namespace poker.net.Services
 
             var scores = new ushort[9];
             var ranks = new int[9];
-            var bestIndexes = new int[9];
+            //var bestIndexes = new int[9];
             var bestHands = includeBestHands ? new Card[9][] : Array.Empty<Card[]>();
 
             int b0 = deck[18].Value, b1 = deck[19].Value, b2 = deck[20].Value, b3 = deck[21].Value, b4 = deck[22].Value;
@@ -169,7 +169,7 @@ namespace poker.net.Services
 
                 scores[p] = bestScore;
                 ranks[p] = PokerLib.hand_rank_jb(bestScore);
-                bestIndexes[p] = bestRow;
+                //bestIndexes[p] = bestRow;
 
                 if (includeBestHands)
                 {
@@ -186,7 +186,7 @@ namespace poker.net.Services
                 }
             }
 
-            return (scores, ranks, bestIndexes, bestHands);
+            return (scores, ranks, bestHands);
         }
 
         // ------------------------------------------------------------
