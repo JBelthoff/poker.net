@@ -48,12 +48,9 @@
                 return string.Empty;
 
             var builder = new StringBuilder();
-            for (int i = 0; i < cards.Count; i++)
-            {
-                builder.Append(cards[i].ID);
-                if (i < cards.Count - 1)
-                    builder.Append('|');
-            }
+            builder.Append(cards[0].ID);
+            for (int i = 1; i < cards.Count; i++)
+                builder.Append('|').Append(cards[i].ID);
 
             return builder.ToString();
         }
