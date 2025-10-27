@@ -10,13 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="x_Benchmark\**" />
-    <Content Remove="x_Benchmark\**" />
-    <EmbeddedResource Remove="x_Benchmark\**" />
-    <None Remove="x_Benchmark\**" /> 
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.2" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
