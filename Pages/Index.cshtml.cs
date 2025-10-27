@@ -18,11 +18,11 @@ namespace poker.net.Pages
 
         private readonly bool _useSql;
 
-        public Int32[] h { get; set; }
+        public int[] h { get; set; }
 
-        public Int32[] r { get; set; }
+        public int[] r { get; set; }
 
-        public Int32[] iWinIndex { get; set; }
+        public int[] iWinIndex { get; set; }
 
         public bool ShowShufflePanel { get; set; }
 
@@ -128,14 +128,18 @@ namespace poker.net.Pages
         public async Task DoDeal()
         {
             var isTestMode = false;
-            const int SelectedWinIndex = 12; // See GetFixedDeck() for values
+            const int SelectedWinIndex = 6; // See GetFixedDeck() for values
             var sourceDeck = await _deckService.RawDeckAsync();
 
             if (!isTestMode)
             {
-                ShuffledDeck = DeckHelper.GetDeepCopyOfDeck([.. sourceDeck]);
-                DeckHelper.Shuffle(ShuffledDeck);
-                Game.CardIds = DeckHelper.AssembleDeckIdsIntoString(ShuffledDeck);
+                var shuffled = DeckHelper.GetDeepCopyOfDeckToArray(sourceDeck);
+                DeckHelper.ShuffleInPlace(shuffled);
+                Game.CardIds = DeckHelper.AssembleDeckIdsIntoString(shuffled);
+
+                // Maintain UI compatibility
+                ShuffledDeck = new List<Card>(shuffled);
+
                 if (_useSql && _db is not null)
                     Game = await _db.RecordNewGameAsync(Game, NetworkHelper.GetIPAddress(HttpContext));
                 else
@@ -144,7 +148,8 @@ namespace poker.net.Pages
             else
             {
                 Game.CardIds = GetFixedDeck(SelectedWinIndex);
-                ShuffledDeck = GetShuffledDeck(sourceDeck, Game.CardIds);
+                var arr = GetShuffledDeckArray(sourceDeck, Game.CardIds);
+                ShuffledDeck = new List<Card>(arr);
             }
 
             ModelState.Clear();
@@ -164,14 +169,16 @@ namespace poker.net.Pages
             }
 
             var source = await _deckService.RawDeckAsync();
-            ShuffledDeck = GetShuffledDeck(source, Game.CardIds);
+            var deckArr = GetShuffledDeckArray(source, Game.CardIds);
 
+            // Maintain UI compatibility
+            ShuffledDeck = new List<Card>(deckArr);
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
             ShowTurnPanel = true;
 
-            _logger.LogInformation("DoFlop: Deck restored from hidden field");
+            _logger.LogInformation("DoFlop (array path): Deck restored from hidden field.");
         }
 
         public async Task DoTurn()
@@ -183,48 +190,76 @@ namespace poker.net.Pages
             }
 
             var source = await _deckService.RawDeckAsync();
-            ShuffledDeck = GetShuffledDeck(source, Game.CardIds);
+            var deckArr = GetShuffledDeckArray(source, Game.CardIds);
 
+            // Maintain UI compatibility
+            ShuffledDeck = new List<Card>(deckArr);
 
             ShowTestPanel = true;
             ShowFlopPanel = false;
             ShowTurnPanel = false;
             ShowRiverPanel = true;
 
-            _logger.LogInformation("DoTurn: Deck restored from hidden field");
-
+            _logger.LogInformation("DoTurn (array path): Deck restored from hidden field.");
         }
 
         public async Task DoRiver()
         {
-            // reset UI state + arrays
-            lPlayerHands.Clear();
-            lWinners.Clear();
-            h = new int[9];
-            r = new int[9];
+            // --- Reset per-run state that feeds the UI ---
+            lPlayerHands.Clear();         // legacy: not used by the array evaluator, but keep cleared for UI
+            lWinners.Clear();             // we'll rebuild this from the array results below
+            h = new int[9];               // per-player raw scores (lower is better)
+            r = new int[9];               // per-player rank category (1 = Straight Flush ... 9 = High Card)
 
+            // --- Sanity: we must have a persisted shuffle order from earlier steps ---
             if (string.IsNullOrWhiteSpace(Game.CardIds))
             {
                 _logger.LogWarning("DoRiver: No CardIDs found in bound property.");
                 return;
             }
 
-            // 1) Rebuild shuffled deck from hidden field
+            // --- 1) Rebuild the shuffled deck as a contiguous array (fast path for evaluation) ---
+            // We use the immutable source deck to deep-copy by ID into a Card[] according to Game.CardIds.
             var source = await _deckService.RawDeckAsync();
-            ShuffledDeck = GetShuffledDeck(source, Game.CardIds);
+            var deckArr = GetShuffledDeckArray(source, Game.CardIds);
 
+            // Also keep the existing Razor view contract that binds to a List<Card>.
+            ShuffledDeck = new List<Card>(deckArr);
 
-            if (ShuffledDeck.Count < 23)
+            // Minimum cards required:
+            //   9 players × 2 hole = 18
+            // + 5 board            = 23
+            if (deckArr.Length < 23)
             {
-                _logger.LogWarning("DoRiver: ShuffledDeck has {Count} cards; expected at least 23.", ShuffledDeck.Count);
+                _logger.LogWarning("DoRiver: ShuffledDeck has {Count} cards; expected at least 23.", deckArr.Length);
                 return;
             }
 
-            // 2) Evaluate all nine players via the new EvalEngine
-            var (scores, ranks, bestIdx, best5sSorted) =
-                EvalEngine.EvaluateRiverNinePlayers(ShuffledDeck, includeBestHands: true);
+            // --- 2) Evaluate the full 9-player river using the zero-allocation array path ---
+            // Returns:
+            //  - scores   : ushort[9] raw evaluator scores (lower = stronger hand)
+            //  - ranks    : int[9] rank categories (1..9) for display like "Straight", "Flush", etc.
+            //  - bestIdx  : int winner index 0..8
+            //  - bestHands: Card[9][] where bestHands[i] is the sorted 5-card best hand for player i (or null)
+            var (scores, ranks, bestIdx, bestHandsArr) =
+                EvalEngine.EvaluateRiverNinePlayersArrays(deckArr, includeBestHands: true);
 
-            // 3) Push results into existing fields (for the view)
+            // --- 3) Rehydrate lWinners for the view (List<List<Card>>) and sort each hand for stable display ---
+            lWinners = new List<List<Card>>(capacity: 9);
+            for (int i = 0; i < 9; i++)
+            {
+                // Convert Card[] → List<Card> for Razor; empty list for null entries.
+                var best = (bestHandsArr is { Length: >= 9 } && bestHandsArr[i] is not null)
+                    ? new List<Card>(bestHandsArr[i])
+                    : new List<Card>(capacity: 0);
+
+                // Sort with A-low straight ("wheel") handling and suit tiebreaks.
+                // This uses your existing helpers: IsWheelA2345 + SuitOrder via SortWinnerInPlace().
+                SortWinnerInPlace(best);
+                lWinners.Add(best);
+            }
+
+            // --- 4) Project numeric results into the arrays the view expects ---
             for (int i = 0; i < 9; i++)
             {
                 h[i] = scores[i];
@@ -232,48 +267,50 @@ namespace poker.net.Pages
             }
 
             iWinIndex = bestIdx;
-            lWinners = best5sSorted;
-            iWinValue = scores.Min(); 
 
-            ShowTestPanel = true;
+            // Lowest score is the winning hand value (for your existing UI).
+            iWinValue = scores.Min();
+
+            // --- 5) Flip UI panels: hide steps, show winner panel ---
+            ShowTestPanel = true;   // keep the test panel visible through the flow
             ShowFlopPanel = false;
             ShowTurnPanel = false;
             ShowRiverPanel = false;
             ShowWinnerPanel = true;
 
-            _logger.LogInformation("DoRiver: Evaluated winners using EvalEngine.");
+            _logger.LogInformation("DoRiver: Evaluated winners using EvalEngine (array path).");
         }
 
         #endregion
 
         #region Functions
 
-        private static List<Card> GetShuffledDeck(IReadOnlyList<Card> deck, string cardIds)
+        private static Card[] GetShuffledDeckArray(IReadOnlyList<Card> deck, string cardIds)
         {
-            if (deck is null)
-                throw new ArgumentNullException(nameof(deck));
+            if (deck is null) throw new ArgumentNullException(nameof(deck));
             if (string.IsNullOrWhiteSpace(cardIds))
                 throw new ArgumentException("CardIDs cannot be null or empty.", nameof(cardIds));
 
-            var deckLookup = deck.ToDictionary(c => c.ID);
-            var shuffled = new List<Card>(deck.Count);
+            var lookup = new Dictionary<int, Card>(deck.Count);
+            for (int i = 0; i < deck.Count; i++) lookup[deck[i].ID] = deck[i];
 
-            foreach (var idStr in cardIds.Split('|', StringSplitOptions.RemoveEmptyEntries))
+            var ids = cardIds.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            var shuffled = new Card[ids.Length];
+
+            for (int i = 0; i < ids.Length; i++)
             {
-                if (!int.TryParse(idStr, out int id) || !deckLookup.TryGetValue(id, out var card))
-                    throw new InvalidOperationException($"Invalid Card ID: {idStr}");
+                if (!int.TryParse(ids[i], out int id) || !lookup.TryGetValue(id, out var c))
+                    throw new InvalidOperationException($"Invalid Card ID: {ids[i]}");
 
-                // Deep copy (since Card is mutable)
-                shuffled.Add(new Card
+                shuffled[i] = new Card
                 {
-                    ID = card.ID,
-                    Face = card.Face,
-                    Suit = card.Suit,
-                    Color = card.Color,
-                    Value = card.Value
-                });
+                    ID = c.ID,
+                    Face = c.Face,
+                    Suit = c.Suit,
+                    Color = c.Color,
+                    Value = c.Value
+                };
             }
-
             return shuffled;
         }
 
@@ -467,6 +504,111 @@ namespace poker.net.Pages
                     };
                     return ComposeFromTop23(t);
             }
+        }
+
+        private static readonly Dictionary<string, int> RankValue = new()
+        {
+            ["2"] = 2,
+            ["3"] = 3,
+            ["4"] = 4,
+            ["5"] = 5,
+            ["6"] = 6,
+            ["7"] = 7,
+            ["8"] = 8,
+            ["9"] = 9,
+            ["10"] = 10,
+            ["J"] = 11,
+            ["Q"] = 12,
+            ["K"] = 13,
+            ["A"] = 14
+        };
+
+        private static bool IsWheelA2345(List<Card> cards)
+        {
+            if (cards is null || cards.Count != 5) return false;
+            bool a = false, b2 = false, b3 = false, b4 = false, b5 = false;
+            for (int i = 0; i < 5; i++)
+            {
+                switch (cards[i].Face)
+                {
+                    case "A": a = true; break;
+                    case "2": b2 = true; break;
+                    case "3": b3 = true; break;
+                    case "4": b4 = true; break;
+                    case "5": b5 = true; break;
+                }
+            }
+            return a && b2 && b3 && b4 && b5;
+        }
+
+        private static int SuitOrder(string suit)
+        {
+            if (string.IsNullOrEmpty(suit)) return 4;
+
+            // Fast path: HTML entity numeric code like "&#9824;"
+            if (suit.Length >= 6 && suit.StartsWith("&#") && suit.EndsWith(";"))
+            {
+                if (int.TryParse(suit.AsSpan(2, suit.Length - 3 - 1), out int code))
+                {
+                    // ♠ 9824, ♥ 9829, ♦ 9830, ♣ 9827
+                    return code switch
+                    {
+                        9827 => 0, // clubs
+                        9830 => 1, // diamonds
+                        9829 => 2, // hearts
+                        9824 => 3, // spades
+                        _ => 4
+                    };
+                }
+            }
+
+            // Normalize other representations
+            ReadOnlySpan<char> s = suit.AsSpan().Trim();
+            if (s.Length == 1)
+            {
+                char c = char.ToUpperInvariant(s[0]);
+                return c switch
+                {
+                    'C' or '♣' => 0,
+                    'D' or '♦' => 1,
+                    'H' or '♥' => 2,
+                    'S' or '♠' => 3,
+                    _ => 4
+                };
+            }
+
+            // Words
+            var upper = suit.Trim().ToUpperInvariant();
+            return upper switch
+            {
+                "CLUBS" => 0,
+                "DIAMONDS" => 1,
+                "HEARTS" => 2,
+                "SPADES" => 3,
+                _ => 4
+            };
+        }
+
+        private static void SortWinnerInPlace(List<Card> hand)
+        {
+            if (hand is null || hand.Count <= 1) return;
+            bool wheel = IsWheelA2345(hand);
+
+            hand.Sort((x, y) =>
+            {
+                int rx = (wheel && x.Face == "A") ? 1 : RankValue[x.Face];
+                int ry = (wheel && y.Face == "A") ? 1 : RankValue[y.Face];
+
+                int cmp = rx.CompareTo(ry);
+                if (cmp != 0) return cmp;
+
+                // Secondary key: suit (now robust to entity/char/word)
+                cmp = SuitOrder(x.Suit).CompareTo(SuitOrder(y.Suit));
+                if (cmp != 0) return cmp;
+
+                // Tertiary: ID for total ordering stability
+                return x.ID.CompareTo(y.ID);
+            });
         }
 
         #endregion
