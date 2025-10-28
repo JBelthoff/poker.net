@@ -166,7 +166,7 @@ Checksums (e.g., `40971729725`) match across runs, confirming deterministic beha
 
 ---
 
-### Summary of Verified Performance
+<!-- ### Summary of Verified Performance
 
 | Language | Environment | Representative Throughput | Verification Source |
 |-----------|--------------|--------------------------:|--------------------:|
@@ -174,10 +174,19 @@ Checksums (e.g., `40971729725`) match across runs, confirming deterministic beha
 | **C# (.NET 8)** | RyuJIT 64-bit / Concurrent GC | ≈ 0.91–1.39 µs per 9-player evaluation (189 combos) | `Results-CSharp.txt` |
 
 All values above are **directly derived from benchmark logs** with **no extrapolation or inferred percentages**.  
+Any further comparison (e.g., relative speed-ups or ratios) should be recalculated from these verified numbers. -->
+
+
+
+### Summary of Verified Performance
+
+| Language | Environment | Representative Throughput | Verification Source |
+|-----------|--------------|--------------------------:|--------------------:|
+| **C++** | MSVC /O2 AVX2 64-bit | ~186–189 M 7-card hands/sec (≈ 5.3 ns/hand) | [Results-C++.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-C++.txt) |
+| **C# (.NET 8)** | RyuJIT 64-bit / Concurrent GC | ≈ 0.91–1.39 µs per 9-player evaluation (189 combos) | [Results-CPlusPlus.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-CPlusPlus.txt) |
+
+All values above are **directly derived from benchmark logs** with **no extrapolation or inferred percentages**.  
 Any further comparison (e.g., relative speed-ups or ratios) should be recalculated from these verified numbers.
-
-
-
 
 
 
@@ -396,7 +405,152 @@ and checksum tests verify that every evaluated hand produces identical results t
 
 ---
 
+
+
+
+
+
+
+
+
+
+
 ## 🧪 Running Benchmarks Locally
+
+To reproduce, follow these steps:
+
+### 1. Clone the Required Repositories
+
+| Repository                                                                          | Description                                                       |
+| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [`poker.net`](https://github.com/JBelthoff/poker.net)                               | Core ASP.NET / C# evaluator (switch to the `optimization` branch) |
+| [`PokerBenchmarks`](https://github.com/JBelthoff/PokerBenchmarks)                   | Standalone benchmark harness and verified results                 |
+| [`bwedding/PokerEvalMultiThread`](https://github.com/bwedding/PokerEvalMultiThread) | Reference **C++** implementation                                  |
+| [`suffecool/pokerlib`](https://github.com/suffecool/pokerlib)                       | Original **C** evaluator by Cactus Kev                            |
+
+---
+
+### 2. Add PokerBenchmarks as Existing Project to poker.net
+
+If you clone both repositories under a single `source` directory like this:
+
+```
+source/poker.net  
+source/PokerBenchmarks
+```
+
+Then everything is already configured:
+
+* `PokerBenchmarks` already includes the correct NuGet packages (`BenchmarkDotNet`)
+* The project references are pre-wired for `poker.net`
+
+Simply:
+
+1. **Open the solution**
+2. **Set `PokerBenchmarks` as the Startup Project**
+3. **Build in Release mode**
+4. Press **Ctrl + F5** to run the benchmarks
+
+BenchmarkDotNet will automatically generate results under:
+
+```
+source/PokerBenchmarks/bin/Release/net8.0/BenchmarkDotNet.Artifacts/results/
+```
+
+
+
+
+
+<!-- ### 2. Set Up the Benchmark Project
+
+1. **Add a new project** to your existing solution:
+
+   * Right-click the solution → **Add → New Project** → select **C# Console App**
+   * Name it **PokerBenchmarks**
+   * ⚠️ *Important:* Ensure it is **not inside** the `poker.net` directory.
+
+2. **Install BenchmarkDotNet**
+
+   * Right-click the new project → **Manage NuGet Packages**
+   * Search for `BenchmarkDotNet` and install the latest stable version.
+
+3. **Replace `Program.cs`**
+
+   * Delete the default `Program.cs`.
+   * Right-click **PokerBenchmarks** → **Add → Existing Item**
+   * Add the three files from `poker.net/x_Benchmark` and confirm overwrites:
+
+     * `FinalRiverBench.cs`
+     * `FiveCardBench.cs`
+     * `Program.cs`
+
+4. **Add a Project Reference**
+
+   * Right-click **PokerBenchmarks** → **Add → Project Reference**
+   * Select the `poker.net` project.
+
+5. **Set as Startup Project**
+
+   * Right-click **PokerBenchmarks** → **Set as Startup Project**.
+
+6. **Build and Run in Release Mode**
+
+   * Use the **Release** configuration (not Debug).
+   * Run the project to execute the benchmarks.
+
+---
+
+### 3. Locate the Benchmark Output
+
+BenchmarkDotNet generates reports in:
+
+```
+bin/Release/net8.0/BenchmarkDotNet.Artifacts/results/
+```
+
+You’ll find CSV, Markdown (`.md`), and HTML output files such as:
+
+```
+PokerBenchmarks.FinalRiverBench-report.csv
+PokerBenchmarks.FinalRiverBench-report-github.md
+PokerBenchmarks.FinalRiverBench-report.html
+```
+
+---
+
+### 📁 Benchmark File Locations
+
+**Source files (within `poker.net`):**
+
+* `x_Benchmark/FinalRiverBench.cs`
+* `x_Benchmark/FiveCardBench.cs`
+* `x_Benchmark/Program.cs`
+
+**Generated results (local or verified in separate repo):**
+
+* `x_Benchmark/ResultsAll.txt`
+* `x_Benchmark/BenchmarkDotNet.Artifacts/`
+* [`PokerBenchmarks/Results`](https://github.com/JBelthoff/PokerBenchmarks/tree/master/Results) *(official verified logs for C++, C#, and historical runs)*
+
+---
+
+**Tip:**
+You can run **C++** and **C** versions independently from their respective repos (`bwedding/PokerEvalMultiThread` and `suffecool/pokerlib`) to cross-check throughput and confirm consistency with the published results. -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ## 🧪 Running Benchmarks Locally
 
 To reproduce the same performance results using **BenchmarkDotNet**, follow these steps:
 
@@ -455,7 +609,26 @@ Benchmark results files are here:
 - `x_Benchmark/ResultsAll.txt`
 - `x_Benchmark/BenchmarkDotNet.Artifacts`
 
+ -->
+
+
+
+
+
+
+
+
+
 ---
+
+
+
+
+
+
+
+
+
 
 ## SQL Server Setup
 
