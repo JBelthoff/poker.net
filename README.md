@@ -1,12 +1,10 @@
 # Poker Hand Evaluator (.NET Core Version)
 _**Version 2.0** - Optimized for .NET 8 and 9 using modern C# performance engineering_ 
 
-> A high-performance Texas Hold’em Poker Hand Evaluator built with **ASP.NET Core Razor Pages**,  faithfully based on [**Cactus Kev’s Poker Hand Evaluator**](https://github.com/suffecool/pokerlib)  and completely re-engineered in **pure, allocation-free C#**.
-
+> A high-performance **Texas Hold’em Poker Hand Evaluator** built with **ASP.NET Core Razor Pages**, faithfully derived from [**Cactus Kev’s classic algorithm**](https://github.com/suffecool/pokerlib) and re-engineered in **pure, allocation-free C#** for deterministic speed and modern clarity.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://poker-calculator.johnbelthoff.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-Developer-blue?logo=csharp)](https://learn.microsoft.com/en-us/dotnet/csharp/)
@@ -14,6 +12,7 @@ _**Version 2.0** - Optimized for .NET 8 and 9 using modern C# performance engine
 [![SQL Server](https://img.shields.io/badge/Database-SQL%20Server-red?logo=microsoftsqlserver)](https://learn.microsoft.com/en-us/sql/sql-server/)
 [![Docker](https://img.shields.io/badge/Containerized-Docker-blue?logo=docker)](https://www.docker.com/)
 
+[![Throughput](https://img.shields.io/badge/Throughput-~189M%20hands%2Fs-brightgreen)]()
 
 A modern **.NET 8/9 implementation** of the legendary [**Cactus Kev Poker Evaluator**](https://github.com/suffecool/pokerlib), rebuilt from the ground up for clarity, determinism, and speed.  
 
@@ -114,6 +113,8 @@ Each full 9-player river evaluation covers **189 five-card combinations (9 × 21
 Allocation notes:
 - The **optimized values-only path** shows no Gen0 collections during measurement, consistent with a zero-allocation hot path.
 - Other benchmark variants (e.g., full evaluation or index/rank-producing paths) do perform small per-operation allocations, as reflected in their GC/Allocated reports.
+
+> **Note:** “Values-only” benchmarks measure the raw numeric evaluation loop. “Full” benchmarks also build and sort winning hands for display.
 
 
 
