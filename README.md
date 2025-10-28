@@ -150,12 +150,9 @@ All core logic is faithfully preserved:
 - Perfect-hash prime product encoding  
 - Rank thresholds identical to Kev’s original  
 
-Where Kev used C arrays, macros, and pointer arithmetic, **Poker.net** employs managed data structures,  
-`Span<T>` buffers, and modern .NET 8 JIT optimizations to achieve equivalent throughput —  
-**without huge in-memory lookup tables or unsafe code**.
+Where Kev used C arrays, macros, and pointer arithmetic, **Poker.net** employs managed data structures, `Span<T>` buffers, and modern .NET 8 JIT optimizations to achieve equivalent throughput — **without huge in-memory lookup tables or unsafe code**.
 
-Comprehensive validation confirms **one-to-one rank and frequency equivalence** with the original algorithm,  
-and checksum tests verify that every evaluated hand produces identical results to the C reference.
+Comprehensive validation confirms **one-to-one rank and frequency equivalence** with the original algorithm, and checksum tests verify that every evaluated hand produces identical results to the C reference.
 
 ---
 
