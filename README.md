@@ -19,22 +19,16 @@ A modern **.NET 8/9 implementation** of the legendary [**Cactus Kev Poker Evalua
   
 This version achieves **near-native C++ performance** through careful algorithmic refactoring, zero memory allocations, and extensive BenchmarkDotNet validation.
 
----
+**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, benchmarking **≈178 million 5-card evaluations per second** in **pure C#**, without lookup tables or unsafe code.  
 
-> ℹ️ **Looking for the earlier ASP.NET WebForms version?**  
-> You can find the legacy implementation here:  
-> 👉 **[JBelthoff/poker.johnbelthoff.com](https://github.com/JBelthoff/poker.johnbelthoff.com)**
-
----
+Ideal for developers exploring **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
 A working version of this application is available at:  
 👉 [https://poker-calculator.johnbelthoff.com/](https://poker-calculator.johnbelthoff.com/)
 
 ---
 
-**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, benchmarking **≈178 million 5-card evaluations per second** in **pure C#**, without lookup tables or unsafe code.  
 
-Ideal for developers exploring **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
 
 
@@ -47,7 +41,7 @@ The application is written in **ASP.NET Core (C#)** and uses a modern C# port of
 
 At this stage, the app:
 
-- Simulates up to **9 players**
+- Simulates **9 players**
 - **Rotates the dealer**
 - **Calculates the winning hand**
 - **Displays detailed results**
