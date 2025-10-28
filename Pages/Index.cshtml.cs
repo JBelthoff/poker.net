@@ -10,6 +10,7 @@ namespace poker.net.Pages
     public class IndexModel : PageModel 
     {
         #region Properties
+
         private readonly ILogger<IndexModel> _logger;
         
         private readonly DbHelper? _db;
@@ -21,8 +22,6 @@ namespace poker.net.Pages
         public int[] h { get; set; }
 
         public int[] r { get; set; }
-
-        //public int[] iWinIndex { get; set; }
 
         public bool ShowShufflePanel { get; set; }
 
@@ -43,11 +42,9 @@ namespace poker.net.Pages
 
         public List<Card> ShuffledDeck { get; set; } = new();
 
-        //public List<List<Card>> lPlayerHands = new();
-
         public List<List<Card>> lWinners = new();
 
-        public Int32 iWinValue { get; set; }
+        public int iWinValue { get; set; }
 
         #endregion
 
@@ -128,7 +125,7 @@ namespace poker.net.Pages
         public async Task DoDeal()
         {
             var isTestMode = false;
-            const int SelectedWinIndex = 6; // See GetFixedDeck() for values
+            const int SelectedWinIndex = 6; // See GetFixedDeck() below for test values
             var sourceDeck = await _deckService.RawDeckAsync();
 
             if (!isTestMode)
@@ -264,8 +261,6 @@ namespace poker.net.Pages
                 h[i] = scores[i];
                 r[i] = ranks[i];
             }
-
-            //iWinIndex = bestIdx;
 
             // Lowest score is the winning hand value (for your existing UI).
             iWinValue = scores.Min();
