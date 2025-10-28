@@ -138,7 +138,92 @@ Checksums (e.g., `40971729725`) match across runs, confirming deterministic beha
 - C++ reference throughput averages **~186–189 million 7-card hands per second (≈ 5.3 ns/hand)** under MSVC /O2 AVX2 builds.  
 - Both implementations produce identical hand distribution statistics and checksums, confirming algorithmic equivalence.
 
+
 ---
+
+## Latest Numbers
+
+
+### .NET 8
+
+````markdown
+```
+BenchmarkDotNet v0.15.4, Windows 10 (10.0.19045.6456/22H2/2022Update)
+Intel Core i9-9940X CPU 3.30GHz, 1 CPU, 28 logical and 14 physical cores
+.NET SDK 10.0.100-rc.2.25502.107
+  [Host]     : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+  DefaultJob : .NET 8.0.21 (8.0.21, 8.0.2125.47513), X64 RyuJIT x86-64-v4
+```
+````
+
+| Method                                          | CardIds               |             Mean |            Error |           StdDev |           Median | Gen0 (ops) | Allocated |
+| :---------------------------------------------- | :-------------------- | ---------------: | ---------------: | ---------------: | ---------------: | ---------: | --------: |
+| Optimized core evaluator (max throughput)       | 30|8(... )|9|50 [146] |         902.3 ns |          1.13 ns |          0.94 ns |         902.6 ns |          0 |         0 |
+| Full 9-player evaluation (what the webapp uses) | 30|8(... )|9|50 [146] |       1,206.7 ns |          8.05 ns |          6.72 ns |       1,206.1 ns |     0.0763 |     784 B |
+| Throughput: Parallel.For batched (values-only)  | 30|8(... )|9|50 [146] | 712,106,180.0 ns | 21,180,375.15 ns | 60,770,471.14 ns | 686,704,000.0 ns |          0 |  13,104 B |
+
+---
+
+### .NET 9
+
+````markdown
+```
+BenchmarkDotNet v0.15.4, Windows 10 (10.0.19045.6456/22H2/2022Update)
+Intel Core i9-9940X CPU 3.30GHz, 1 CPU, 28 logical and 14 physical cores
+.NET SDK 10.0.100-rc.2.25502.107
+  [Host]     : .NET 9.0.10 (9.0.10, 9.0.1025.47515), X64 RyuJIT x86-64-v4
+  DefaultJob : .NET 9.0.10 (9.0.10, 9.0.1025.47515), X64 RyuJIT x86-64-v4
+```
+````
+
+| Method                                          | CardIds               |             Mean |            Error |           StdDev |           Median | Gen0 (ops) | Allocated |
+| :---------------------------------------------- | :-------------------- | ---------------: | ---------------: | ---------------: | ---------------: | ---------: | --------: |
+| Optimized core evaluator (max throughput)       | 30|8(... )|9|50 [146] |         866.8 ns |          1.34 ns |          1.12 ns |         866.8 ns |          0 |         0 |
+| Full 9-player evaluation (what the webapp uses) | 30|8(... )|9|50 [146] |       1,199.1 ns |          2.73 ns |          2.56 ns |       1,199.8 ns |     0.0763 |     784 B |
+| Throughput: Parallel.For batched (values-only)  | 30|8(... )|9|50 [146] | 684,865,571.7 ns | 17,912,920.22 ns | 50,523,712.99 ns | 663,761,350.0 ns |          0 |  11,424 B |
+
+---
+
+### .NET 10
+
+````markdown
+```
+BenchmarkDotNet v0.15.4, Windows 10 (10.0.19045.6456/22H2/2022Update)
+Intel Core i9-9940X CPU 3.30GHz, 1 CPU, 28 logical and 14 physical cores
+.NET SDK 10.0.100-rc.2.25502.107
+  [Host]     : .NET 10.0.0 (10.0.0-rc.2.25502.107, 10.0.25.50307), X64 RyuJIT x86-64-v4
+  DefaultJob : .NET 10.0.0 (10.0.0-rc.2.25502.107, 10.0.25.50307), X64 RyuJIT x86-64-v4
+```
+````
+
+| Method                                          | CardIds               |             Mean |           Error |          StdDev | Gen0 (ops) | Allocated |
+| :---------------------------------------------- | :-------------------- | ---------------: | --------------: | --------------: | ---------: | --------: |
+| Optimized core evaluator (max throughput)       | 30|8(... )|9|50 [146] |         955.7 ns |         3.55 ns |         2.97 ns |          0 |         0 |
+| Full 9-player evaluation (what the webapp uses) | 30|8(... )|9|50 [146] |       1,119.7 ns |         3.00 ns |         2.81 ns |     0.0763 |     784 B |
+| Throughput: Parallel.For batched (values-only)  | 30|8(... )|9|50 [146] | 726,602,341.7 ns | 2,276,099.26 ns | 1,777,028.58 ns |          0 |  12,776 B |
+
+
+### Multithreaded Engine-Only Throughput  
+(10 M Rivers; 9 Players × 21 Combos = 189 Five-Card Evals per River)
+
+| Framework     | Mean Time (s) | Rivers / sec (9-player evals) | Derived 5-Card Evals / sec (×189) |
+|:--------------|--------------:|------------------------------:|----------------------------------:|
+| **.NET 9**    | 0.684865572   | **14,601,405.6**              | **2,759,665,658.9**               |
+| **.NET 8**    | 0.712106180   | 14,042,849.6                  | 2,654,098,578.4                   |
+| **.NET 10 (RC)** | 0.726602342 | 13,762,686.2                  | 2,601,147,685.3                   |
+
+---
+
+### Quick Take
+- **.NET 9** is currently the fastest, sustaining **≈ 2.76 billion** derived five-card evaluations per second.  
+- **.NET 8** follows closely at **≈ 2.65 billion / s**, within ~4 % of .NET 9.  
+- **.NET 10 RC** trails slightly at **≈ 2.60 billion / s**, likely due to JIT tuning still in progress.
+
+All numbers are **directly derived from the benchmark logs** (Mean times of 0.685 s, 0.712 s, 0.727 s) and correspond exactly to the workload defined in `FinalRiverBench.Parallel_Batched_ValuesOnly()`.
+
+
+---
+
 
 ### 📚 Algorithm Lineage and Faithfulness
 
