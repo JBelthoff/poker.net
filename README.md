@@ -16,10 +16,25 @@ _**Version 2.0** - Optimized for .NET 8 and 9 using modern C# performance engine
 
 
 A modern **.NET 8/9 implementation** of the legendary [**Cactus Kev Poker Evaluator**](https://github.com/suffecool/pokerlib), rebuilt from the ground up for clarity, determinism, and speed.  
-  
-This version achieves **near-native C++ performance** through careful algorithmic refactoring, zero memory allocations, and extensive BenchmarkDotNet validation.
 
-**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, benchmarking **≈178 million 5-card evaluations per second** in **pure C#**, without lookup tables or unsafe code.  
+This version achieves **near-native C++ performance** through careful algorithmic refactoring, zero memory allocations, and extensive BenchmarkDotNet validation (see *Performance* section for verified benchmark data).
+
+<!-- This version achieves **near-native C++ performance** through careful algorithmic refactoring, zero memory allocations, and extensive BenchmarkDotNet validation (see *Performance* section for verified benchmark data*). -->
+
+**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, implemented in **pure C#** without lookup tables or unsafe code. Estimated throughput, based on derived five-card evaluation counts from recent benchmarks, corresponds to roughly **170–190 million evaluations per second**, depending on workload (see *Performance* section for logs).
+
+_All benchmarks were performed on an Intel Core i9-9940X (14-core, 28-thread) running Windows 10 (22H2) with .NET 8.0.21 under the High-Performance power plan._
+
+
+
+  
+<!-- This version achieves **near-native C++ performance** through careful algorithmic refactoring, zero memory allocations, and extensive BenchmarkDotNet validation (see *Performance* section for verified benchmark data).
+
+**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, implemented in **pure C#** without lookup tables or unsafe code. Estimated throughput, based on derived five-card evaluation counts from recent benchmarks, corresponds to roughly **170–190 million evaluations per second**, depending on workload (see *Performance* section for logs).
+
+
+
+**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, benchmarking **≈178 million 5-card evaluations per second** in **pure C#**, without lookup tables or unsafe code.   -->
 
 Ideal for developers exploring **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
 
@@ -46,9 +61,10 @@ At this stage, the app:
 - **Calculates the winning hand**
 - **Displays detailed results**
 
-Under the hood, the evaluation engine performs about **≈ 178 million 5-card evaluations per second (single-threaded)** and scales up to **≈ 2.76 billion hands per second (multi-threaded)** —  placing it within **≈ 98 % of an AVX2-optimized C++ implementation** while preserving fully managed, allocation-free execution.
+Under the hood, the evaluation engine is optimized for high throughput and deterministic performance, maintaining fully managed, allocation-free execution.
 
-Future updates will continue refining gameplay and introduce interactive features such as hand histories, betting logic, and visualized probability analysis.
+
+
 
 
 ---
@@ -93,7 +109,128 @@ dotnet run
 
 
 
+
+
+
+
+
 ## ⚡ Performance
+
+### Benchmark Environment
+
+All benchmarks were executed on **Windows 10 (22H2)** with an **Intel Core i9-9940X (14 cores / 28 threads)** using **.NET 8.0.21** and **BenchmarkDotNet v0.15.4**.  
+Power plan: *High Performance*.  
+Garbage Collector: *Concurrent Workstation*.
+
+C++ reference results were gathered from the same system using a **Visual Studio x64 Release build** of [**bwedding/PokerEvalMultiThread**](https://github.com/bwedding/PokerEvalMultiThread) (*MSVC /O2 optimization, AVX2-capable CPU*).
+
+
+---
+
+### Verified Results (.NET 8)
+
+| Benchmark (C# /.NET 8.0.21) | Mean (ns / op) | Mean (µs / op) | Description |
+|------------------------------|---------------:|---------------:|--------------|
+| **Optimized core evaluator (values-only, no allocs)** | ≈ 907 ns | 0.907 µs | Evaluates 9 players × 21 7-card combinations (values only) |
+| **Core evaluator (9 players × 21 combos)** | ≈ 1 390 ns | 1.39 µs | Best-of-7 evaluation with ranks and scores |
+| **Full 9-player showdown (including setup and scoring)** | ≈ 910 ns | 0.91 µs | End-to-end EvalEngine path |
+| **Full 9-player evaluation + best-hand reconstruction** | ≈ 1 221.9 ns | 1.22 µs | Returns sorted winning hands for UI display |
+
+Each full 9-player river evaluation covers **189 five-card combinations (9 × 21)**.
+
+Allocation notes:
+- The **optimized values-only path** shows no Gen0 collections during measurement, consistent with a zero-allocation hot path.
+- Other benchmark variants (e.g., full evaluation or index/rank-producing paths) do perform small per-operation allocations, as reflected in their GC/Allocated reports.
+
+
+
+---
+
+### Verified Results (C++ Reference)
+
+| Benchmark (C++ bwedding / Suffecool port) | Hands Tested | Time (s) | Hands / sec (M) | ns / hand |
+|--------------------------------------------|--------------:|---------:|----------------:|----------:|
+| **10 M 7-card hands** | 10,000,000 | 0.0529 | 188.94 M | 5.29 ns |
+| **50 M 7-card hands** | 50,000,000 | 0.2686 | 186.17 M | 5.37 ns |
+| **100 M 7-card hands** | 100,000,000 | 0.5326 | 187.74 M | 5.33 ns |
+
+Checksums (e.g., `40971729725`) match across runs, confirming deterministic behavior.
+
+---
+
+### Observations
+
+- The optimized .NET 8 build demonstrates consistent sub-microsecond operation for full 9-player evaluations and under 1 µs for the fastest paths.  
+- C++ reference throughput averages **~186–189 million 7-card hands per second (≈ 5.3 ns/hand)** under MSVC /O2 AVX2 builds.  
+- Both implementations produce identical hand distribution statistics and checksums, confirming algorithmic equivalence.
+
+---
+
+### Summary of Verified Performance
+
+| Language | Environment | Representative Throughput | Verification Source |
+|-----------|--------------|--------------------------:|--------------------:|
+| **C++** | MSVC /O2 AVX2 64-bit | ~186–189 M 7-card hands/sec (≈ 5.3 ns/hand) | `Results-C++.txt` |
+| **C# (.NET 8)** | RyuJIT 64-bit / Concurrent GC | ≈ 0.91–1.39 µs per 9-player evaluation (189 combos) | `Results-CSharp.txt` |
+
+All values above are **directly derived from benchmark logs** with **no extrapolation or inferred percentages**.  
+Any further comparison (e.g., relative speed-ups or ratios) should be recalculated from these verified numbers.
+
+
+
+
+
+
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ## ⚡ Performance
 
 
 ### Version Notes
@@ -209,6 +346,7 @@ The managed version performs within **statistical noise** of the native C++ eval
 
 
 
+--- -->
 
 
 
@@ -230,7 +368,9 @@ The managed version performs within **statistical noise** of the native C++ eval
 
 
 
----
+
+
+
 
 
 ### 📚 Algorithm Lineage and Faithfulness
