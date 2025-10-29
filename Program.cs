@@ -28,7 +28,7 @@ builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
-// Optional: log which mode you’re in
+// Optional: log which mode you're in
 app.Logger.LogInformation("Startup mode: UseSqlServer = {UseSql}", useSql);
 
 // Configure pipeline
