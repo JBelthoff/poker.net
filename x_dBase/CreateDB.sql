@@ -1,105 +1,60 @@
-USE [PokerApp]
-GO
-
-
-/****** Object:  UserDefinedFunction [dbo].[DelimitedSplit8K]    Script Date: 2/6/2022 9:51:09 AM ******/ 
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-CREATE FUNCTION [dbo].[DelimitedSplit8K]
---===== Define I/O parameters
-        (@pString VARCHAR(8000), @pDelimiter CHAR(1))
---WARNING!!! DO NOT USE MAX DATA-TYPES HERE!  IT WILL KILL PERFORMANCE!
-RETURNS TABLE WITH SCHEMABINDING AS
- RETURN
---===== "Inline" CTE Driven "Tally Table" produces values from 1 up to 10,000...
-     -- enough to cover VARCHAR(8000)
-  WITH E1(N) AS (
-                 SELECT 1 UNION ALL SELECT 1 UNION ALL SELECT 1 UNION ALL
-                 SELECT 1 UNION ALL SELECT 1 UNION ALL SELECT 1 UNION ALL
-                 SELECT 1 UNION ALL SELECT 1 UNION ALL SELECT 1 UNION ALL SELECT 1
-                ),                          --10E+1 or 10 rows
-       E2(N) AS (SELECT 1 FROM E1 a, E1 b), --10E+2 or 100 rows
-       E4(N) AS (SELECT 1 FROM E2 a, E2 b), --10E+4 or 10,000 rows max
- cteTally(N) AS (--==== This provides the "base" CTE and limits the number of rows right up front
-                     -- for both a performance gain and prevention of accidental "overruns"
-                 SELECT TOP (ISNULL(DATALENGTH(@pString),0)) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) FROM E4
-                ),
-cteStart(N1) AS (--==== This returns N+1 (starting position of each "element" just once for each delimiter)
-                 SELECT 1 UNION ALL
-                 SELECT t.N+1 FROM cteTally t WHERE SUBSTRING(@pString,t.N,1) = @pDelimiter
-                ),
-cteLen(N1,L1) AS(--==== Return start and length (for use in substring)
-                 SELECT s.N1,
-                        ISNULL(NULLIF(CHARINDEX(@pDelimiter,@pString,s.N1),0)-s.N1,8000)
-                   FROM cteStart s
-                )
---===== Do the actual split. The ISNULL/NULLIF combo handles the length for the final element when no delimiter is found.
- SELECT ItemNumber = ROW_NUMBER() OVER(ORDER BY l.N1),
-        Item       = SUBSTRING(@pString, l.N1, l.L1)
-   FROM cteLen l
-;
-
-
-
-
-GO
-/****** Object:  Table [dbo].[Deck]    Script Date: 2/6/2022 9:51:09 AM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-CREATE TABLE [dbo].[Deck](
+CREATE TABLE [dbo].[Deck]
+(
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Face] [varchar](10) NULL,
 	[Abbrv] [varchar](2) NULL,
 	[Suit] [varchar](10) NULL,
 	[Value] [int] NULL,
- CONSTRAINT [PK_Deck] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+	CONSTRAINT [PK_Deck] PRIMARY KEY CLUSTERED 
+	(
+		[ID] ASC
+	) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Game]    Script Date: 2/6/2022 9:51:09 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [dbo].[Game](
+CREATE TABLE [dbo].[Game]
+(
 	[ID] [bigint] IDENTITY(1,1) NOT NULL,
 	[GameID] [uniqueidentifier] NOT NULL,
 	[CreateDate] [datetime2](7) NOT NULL,
 	[CreateIP] [varchar](100) NOT NULL,
- CONSTRAINT [PK_Game] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+	CONSTRAINT [PK_Game] PRIMARY KEY CLUSTERED 
+	(
+		[ID] ASC
+	) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[GameCards]    Script Date: 2/6/2022 9:51:09 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [dbo].[GameCards](
+CREATE TABLE [dbo].[GameCards]
+(
 	[ID] [bigint] IDENTITY(1,1) NOT NULL,
 	[GameID] [uniqueidentifier] NOT NULL,
 	[CardID] [int] NOT NULL,
- CONSTRAINT [PK_GameCards] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+	CONSTRAINT [PK_GameCards] PRIMARY KEY CLUSTERED 
+	(
+		[ID] ASC
+	) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Suits]    Script Date: 2/6/2022 9:51:09 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [dbo].[Suits](
+CREATE TABLE [dbo].[Suits]
+(
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Name] [varchar](10) NOT NULL,
 	[Abbrv] [char](1) NULL,
@@ -107,12 +62,13 @@ CREATE TABLE [dbo].[Suits](
 	[ColorHex] [char](6) NULL,
 	[HTMLName] [varchar](10) NULL,
 	[UTF8] [varchar](10) NULL,
- CONSTRAINT [PK_Suits] PRIMARY KEY CLUSTERED 
-(
-	[ID] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+	CONSTRAINT [PK_Suits] PRIMARY KEY CLUSTERED 
+	(
+		[ID] ASC
+	) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
+
 SET IDENTITY_INSERT [dbo].[Deck] ON 
 GO
 INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (1, N'Ace', N'A', N'1', 268442665)
@@ -221,6 +177,7 @@ INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (52, N'King'
 GO
 SET IDENTITY_INSERT [dbo].[Deck] OFF
 GO
+
 SET IDENTITY_INSERT [dbo].[Game] ON 
 GO
 INSERT [dbo].[Game] ([ID], [GameID], [CreateDate], [CreateIP]) VALUES (1, N'00932162-9a80-4c37-841b-6dd18e46c9c6', CAST(N'2022-02-06T09:47:11.3113305' AS DateTime2), N'::1')
@@ -233,6 +190,7 @@ INSERT [dbo].[Game] ([ID], [GameID], [CreateDate], [CreateIP]) VALUES (4, N'5a45
 GO
 SET IDENTITY_INSERT [dbo].[Game] OFF
 GO
+
 SET IDENTITY_INSERT [dbo].[GameCards] ON 
 GO
 INSERT [dbo].[GameCards] ([ID], [GameID], [CardID]) VALUES (1, N'00932162-9a80-4c37-841b-6dd18e46c9c6', 52)
@@ -653,6 +611,7 @@ INSERT [dbo].[GameCards] ([ID], [GameID], [CardID]) VALUES (208, N'5a4512f7-77a2
 GO
 SET IDENTITY_INSERT [dbo].[GameCards] OFF
 GO
+
 SET IDENTITY_INSERT [dbo].[Suits] ON 
 GO
 INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [UTF8]) VALUES (1, N'Spade', N'S', N'Black', N'000000', N'&spades;', N'&#9824;')
@@ -665,24 +624,22 @@ INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [U
 GO
 SET IDENTITY_INSERT [dbo].[Suits] OFF
 GO
+
 ALTER TABLE [dbo].[Game] ADD  CONSTRAINT [DF_Game_GameID]  DEFAULT (newid()) FOR [GameID]
 GO
 ALTER TABLE [dbo].[Game] ADD  CONSTRAINT [DF_Game_CreateDate]  DEFAULT (sysdatetime()) FOR [CreateDate]
 GO
-/****** Object:  StoredProcedure [dbo].[Game_InsertNewGame]    Script Date: 2/6/2022 9:51:10 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE Procedure [dbo].[Game_InsertNewGame]
-
 	@Array varchar(8000)
 	, @GameID uniqueidentifier Output
-
 As
-
 Set NoCount On
-
+Set XACT_ABORT ON -- Without this, the transaction will *always* commit
 Begin Tran
 
 	Select @GameID = NEWID()
@@ -696,24 +653,19 @@ Begin Tran
 	Order By a.ItemNumber
 	
 Commit Tran
-
 GO
-/****** Object:  StoredProcedure [dbo].[Game_InsertNewGame2]    Script Date: 2/6/2022 9:51:10 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
 CREATE Procedure [dbo].[Game_InsertNewGame2]
-
 	@Array varchar(8000)
 	, @CreateIP varchar(100)
 	, @GameID uniqueidentifier Output
-
 As
-
 Set NoCount On
-
+Set XACT_ABORT ON -- Without this, the transaction will *always* commit
 Begin Tran
 
 	Select @GameID = NEWID()
@@ -722,76 +674,62 @@ Begin Tran
 	Values ( @GameID, @CreateIP )
 
 	Insert Into dbo.GameCards
-	Select @GameID, a.Item
-	From dbo.DelimitedSplit8K(@Array, '|') a
-	Order By a.ItemNumber
+	Select @GameID, a.[value] as Item
+	From string_split(@Array, '|', 1) a
+	Order By a.[ordinal]
 	
 Commit Tran
-
-
 GO
-/****** Object:  StoredProcedure [dbo].[GameDeck_GetNewDeck]    Script Date: 2/6/2022 9:51:10 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 Create Procedure [dbo].[GameDeck_GetNewDeck]
-
 As
-
 Set NoCount On
-
-	Select
-		ROW_NUMBER() Over(Order By NewID()) ID
-		, s.ColorHex Color
-		, d.Abbrv Face
-		, s.UTF8 Suit
-	From dbo.Deck d
-		Inner Join dbo.Suits s
-			On s.ID = d.Suit
-
+Select
+	ROW_NUMBER() Over(Order By NewID()) ID
+	, s.ColorHex Color
+	, d.Abbrv Face
+	, s.UTF8 Suit
+From dbo.Deck d
+	Inner Join dbo.Suits s
+		On s.ID = d.Suit
 GO
-/****** Object:  StoredProcedure [dbo].[GameDeck_GetRawDeck]    Script Date: 2/6/2022 9:51:10 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 CREATE Procedure [dbo].[GameDeck_GetRawDeck]
-
 As
-
 Set NoCount On
-
-	Select
-		d.ID
-		, s.ColorHex Color
-		, d.Abbrv Face
-		, s.UTF8 Suit
-		, d.Value
-	From dbo.Deck d
-		Inner Join dbo.Suits s
-			On s.ID = d.Suit
-	Order By d.ID
-
+Select
+	d.ID
+	, s.ColorHex Color
+	, d.Abbrv Face
+	, s.UTF8 Suit
+	, d.Value
+From dbo.Deck d
+	Inner Join dbo.Suits s
+		On s.ID = d.Suit
+Order By d.ID
 GO
-/****** Object:  StoredProcedure [dbo].[GameDeck_GetShuffledDeck]    Script Date: 2/6/2022 9:51:10 AM ******/
+
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 Create Procedure [dbo].[GameDeck_GetShuffledDeck]
-
 As
-
 Set NoCount On
-
-	Select
-		ROW_NUMBER() Over(Order By NewID()) ID
-		, s.ColorHex Color
-		, d.Abbrv Face
-		, s.UTF8 Suit
-	From dbo.Deck d
-		Inner Join dbo.Suits s
-			On s.ID = d.Suit
-
+Select
+	ROW_NUMBER() Over(Order By NewID()) ID
+	, s.ColorHex Color
+	, d.Abbrv Face
+	, s.UTF8 Suit
+From dbo.Deck d
+	Inner Join dbo.Suits s
+		On s.ID = d.Suit
 GO
