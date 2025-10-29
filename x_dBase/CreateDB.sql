@@ -1,6 +1,25 @@
+-- Revision inspired by Davide Mauri (@yorek, Azure SQL Product Manager)
+-- regarding modern STRING_SPLIT(@s, '|', 1) support (SQL Server 2022+),
+-- while maintaining backward compatibility via dbo.DelimitedSplit8K for SQL Server 2019.
+
 USE [PokerApp]
 GO
 
+/************************************************************************************
+    Database: PokerApp
+    Author: John Belthoff
+    Original Script Date: 2/6/2022
+    Last Updated: 10/29/2025
+
+    Notes:
+    - This script reflects updates and refinements discussed with Davide Mauri (@yorek),
+      Azure SQL Product Manager, who proposed using SQL Server 2022 features such as
+      STRING_SPLIT(@s, '|', 1) with ordinal output for modernized data handling.
+    - The current implementation remains optimized for SQL Server 2019 compatibility,
+      retaining the dbo.DelimitedSplit8K function and transaction-safe patterns.
+    - Future revisions may incorporate the 2022+ syntax once environments are upgraded.
+
+************************************************************************************/
 
 /****** Object:  UserDefinedFunction [dbo].[DelimitedSplit8K]    Script Date: 2/6/2022 9:51:09 AM ******/ 
 SET ANSI_NULLS ON
@@ -699,6 +718,18 @@ Commit Tran
 
 GO
 /****** Object:  StoredProcedure [dbo].[Game_InsertNewGame2]    Script Date: 2/6/2022 9:51:10 AM ******/
+-- Updated for transaction safety (XACT_ABORT ON).
+-- Thanks to Davide Mauri (@yorek, Azure SQL Product Manager) for highlighting
+-- the modern STRING_SPLIT(@s, '|', 1) approach available in SQL Server 2022+.
+-- Current implementation retains dbo.DelimitedSplit8K for SQL Server 2019 compatibility.
+/*
+    Example for SQL Server 2022+:
+
+    INSERT INTO dbo.GameCards (GameID, Item)
+    SELECT @GameID, s.[value]
+    FROM STRING_SPLIT(@Array, '|', 1) AS s  -- replaces dbo.DelimitedSplit8K
+    ORDER BY s.[ordinal];
+*/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -713,6 +744,7 @@ CREATE Procedure [dbo].[Game_InsertNewGame2]
 As
 
 Set NoCount On
+Set XACT_ABORT On
 
 Begin Tran
 
