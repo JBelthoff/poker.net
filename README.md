@@ -34,13 +34,14 @@ A working version of this application is available at:
 
 | Language | Environment | Representative Throughput | Verification Source |
 |-----------|--------------|--------------------------:|--------------------:|
-| **C++** | MSVC /O2 AVX2 64-bit | ~186–189 M 7-card hands/sec (≈ 5.3 ns/hand) | [Results-C++.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-C++.txt) |
-| **C# (.NET 8)** | RyuJIT 64-bit / Concurrent GC | ≈ 0.91–1.39 µs per 9-player evaluation (189 combos) | [Results-CSharp.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-FinalRiverBench.txt) |
+| **C++** | MSVC /O2 AVX2 64-bit | ~188–191 M 7-card hands/sec (≈ 5.3 ns/hand) | [Results-C++.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-C++.txt) |
+| **C# (.NET 8)** | RyuJIT 64-bit / Concurrent GC | ≈ 0.90–1.20 µs per 9-player evaluation (189 combos) | [Results-FinalRiverBench.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-FinalRiverBench.txt) |
 
 **Test Environment:** Intel Core i9-9940X (14 cores / 28 threads), Windows 10 (22H2), .NET 8.0.21 (Release x64), High-Performance power plan.  
 
 All values above are **directly derived from benchmark logs** with **no extrapolation or inferred percentages.**  
 Any further comparison (e.g., relative speed-ups or ratios) should be recalculated from these verified numbers.
+
 
 ---
 
