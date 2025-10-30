@@ -136,10 +136,6 @@ Checksums (e.g., `40971729725`) match across runs, confirming deterministic beha
 
 - The optimized .NET 8 build demonstrates consistent sub-microsecond operation for full 9-player evaluations and under 1 µs for the fastest paths.  
 - C++ reference throughput averages **~186–189 million 7-card hands per second (≈ 5.3 ns/hand)** under MSVC /O2 AVX2 builds.  
-- Both implementations produce identical hand distribution statistics and checksums, confirming algorithmic equivalence.
-
-
-
 
 
 ---
