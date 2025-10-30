@@ -208,15 +208,22 @@ source/PokerBenchmarks/bin/Release/net8.0/BenchmarkDotNet.Artifacts/results/
 
 ## SQL Server Setup
 
-> Skip this section if you're running in No-DB (Static) mode.
+> Skip this section if you're running in **No-DB (Static)** mode.
 
 1. Create a SQL Server database named `PokerApp`.  
 2. Create a Login and User for the database.  
-3. Run the script [`CreateDB.sql`](x_dBase/CreateDB.sql) against `PokerApp`.  
+3. Run the appropriate initialization script from the [`x_dBase`](x_dBase/) folder:
+   - [`CreateDB-2019.sql`](x_dBase/CreateDB-2019.sql) — for **SQL Server 2019 or earlier**  
+   - [`CreateDB-2022.sql`](x_dBase/CreateDB-2022.sql) — for **SQL Server 2022 and newer** (supports `STRING_SPLIT(@s, '|', 1)` and other modern features)  
 4. Update your connection string (via `appsettings.json`, User Secrets, or environment variables).  
 5. Set `"UseSqlServer": true` in your configuration.  
 6. Build and run the project (`dotnet run`, Docker, or IIS Express).  
 7. Visit the app in your browser and start playing!
+
+---
+
+>*The 2019 script maintains full backward compatibility down to SQL Server 2008 by using `datetime2` and the legacy `DelimitedSplit8K` function.  
+The 2022 script reflects modern best practices per Davide Mauri (@yorek), including transaction safety (`XACT_ABORT ON`) and native `STRING_SPLIT` with ordinal output.*
 
 ---
 

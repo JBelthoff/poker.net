@@ -1,6 +1,9 @@
--- Revision inspired by Davide Mauri (@yorek, Azure SQL Product Manager)
--- regarding modern STRING_SPLIT(@s, '|', 1) support (SQL Server 2022+),
--- while maintaining backward compatibility via dbo.DelimitedSplit8K for SQL Server 2019.
+﻿-- SQL Server 2019 version of the PokerApp database creation script.
+-- Fully backward compatible with all versions of SQL Server from 2008 onward.
+-- Retains dbo.DelimitedSplit8K for pipe-delimited parsing to ensure broad
+-- compatibility, including environments predating STRING_SPLIT().
+-- CreateDB-2022.sql implements native STRING_SPLIT(@s, '|', 1) with ordinal output
+-- per guidance from Davide Mauri (@yorek).
 
 USE [PokerApp]
 GO
@@ -8,20 +11,26 @@ GO
 /************************************************************************************
     Database: PokerApp
     Author: John Belthoff
-    Original Script Date: 2/6/2022
-    Last Updated: 10/29/2025
+    Original Script Date: 2007
+    Last Updated: 10/30/2025
+
+    Target Platform:
+    - Optimized for SQL Server 2019
+      and backward compatible to SQL Server 2008
 
     Notes:
-    - This script reflects updates and refinements discussed with Davide Mauri (@yorek),
-      Azure SQL Product Manager, who proposed using SQL Server 2022 features such as
-      STRING_SPLIT(@s, '|', 1) with ordinal output for modernized data handling.
-    - The current implementation remains optimized for SQL Server 2019 compatibility,
-      retaining the dbo.DelimitedSplit8K function and transaction-safe patterns.
-    - Future revisions may incorporate the 2022+ syntax once environments are upgraded.
+    - Maintains full compatibility across SQL Server 2008–2019.
+    - Uses dbo.DelimitedSplit8K for string parsing.
+    - Avoids 2022-only syntax while retaining transaction safety (SET XACT_ABORT ON).
+    - Data types and DDL structures conform to features available since SQL Server 2008.
 
+    Acknowledgment:
+    - Thanks to Davide Mauri (@yorek, Azure SQL Product Manager) for suggesting
+      the 2022 STRING_SPLIT ordinal pattern; those enhancements are implemented
+      in CreateDB-2022.sql.
 ************************************************************************************/
 
-/****** Object:  UserDefinedFunction [dbo].[DelimitedSplit8K]    Script Date: 2/6/2022 9:51:09 AM ******/ 
+/****** Object:  UserDefinedFunction [dbo].[DelimitedSplit8K]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -65,7 +74,7 @@ cteLen(N1,L1) AS(--==== Return start and length (for use in substring)
 
 
 GO
-/****** Object:  Table [dbo].[Deck]    Script Date: 2/6/2022 9:51:09 AM ******/
+/****** Object:  Table [dbo].[Deck]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -74,7 +83,7 @@ CREATE TABLE [dbo].[Deck](
 	[ID] [int] IDENTITY(1,1) NOT NULL,
 	[Face] [varchar](10) NULL,
 	[Abbrv] [varchar](2) NULL,
-	[Suit] [varchar](10) NULL,
+	[Suit] [int] NULL,
 	[Value] [int] NULL,
  CONSTRAINT [PK_Deck] PRIMARY KEY CLUSTERED 
 (
@@ -82,7 +91,7 @@ CREATE TABLE [dbo].[Deck](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Game]    Script Date: 2/6/2022 9:51:09 AM ******/
+/****** Object:  Table [dbo].[Game]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -90,6 +99,7 @@ GO
 CREATE TABLE [dbo].[Game](
 	[ID] [bigint] IDENTITY(1,1) NOT NULL,
 	[GameID] [uniqueidentifier] NOT NULL,
+	[DealerID] [int] NOT NULL,
 	[CreateDate] [datetime2](7) NOT NULL,
 	[CreateIP] [varchar](100) NOT NULL,
  CONSTRAINT [PK_Game] PRIMARY KEY CLUSTERED 
@@ -98,7 +108,7 @@ CREATE TABLE [dbo].[Game](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[GameCards]    Script Date: 2/6/2022 9:51:09 AM ******/
+/****** Object:  Table [dbo].[GameCards]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -113,7 +123,7 @@ CREATE TABLE [dbo].[GameCards](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Suits]    Script Date: 2/6/2022 9:51:09 AM ******/
+/****** Object:  Table [dbo].[Suits]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -134,124 +144,133 @@ CREATE TABLE [dbo].[Suits](
 GO
 SET IDENTITY_INSERT [dbo].[Deck] ON 
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (1, N'Ace', N'A', N'1', 268442665)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (1, N'Ace', N'A', 1, 268442665)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (2, N'Ace', N'A', N'2', 268446761)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (2, N'Ace', N'A', 2, 268446761)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (3, N'Ace', N'A', N'3', 268454953)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (3, N'Ace', N'A', 3, 268454953)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (4, N'Ace', N'A', N'4', 268471337)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (4, N'Ace', N'A', 4, 268471337)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (5, N'2', N'2', N'1', 69634)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (5, N'2', N'2', 1, 69634)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (6, N'2', N'2', N'2', 73730)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (6, N'2', N'2', 2, 73730)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (7, N'2', N'2', N'3', 81922)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (7, N'2', N'2', 3, 81922)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (8, N'2', N'2', N'4', 98306)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (8, N'2', N'2', 4, 98306)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (9, N'3', N'3', N'1', 135427)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (9, N'3', N'3', 1, 135427)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (10, N'3', N'3', N'2', 139523)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (10, N'3', N'3', 2, 139523)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (11, N'3', N'3', N'3', 147715)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (11, N'3', N'3', 3, 147715)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (12, N'3', N'3', N'4', 164099)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (12, N'3', N'3', 4, 164099)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (13, N'4', N'4', N'1', 266757)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (13, N'4', N'4', 1, 266757)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (14, N'4', N'4', N'2', 270853)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (14, N'4', N'4', 2, 270853)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (15, N'4', N'4', N'3', 279045)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (15, N'4', N'4', 3, 279045)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (16, N'4', N'4', N'4', 295429)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (16, N'4', N'4', 4, 295429)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (17, N'5', N'5', N'1', 529159)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (17, N'5', N'5', 1, 529159)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (18, N'5', N'5', N'2', 533255)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (18, N'5', N'5', 2, 533255)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (19, N'5', N'5', N'3', 541447)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (19, N'5', N'5', 3, 541447)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (20, N'5', N'5', N'4', 557831)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (20, N'5', N'5', 4, 557831)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (21, N'6', N'6', N'1', 1053707)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (21, N'6', N'6', 1, 1053707)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (22, N'6', N'6', N'2', 1057803)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (22, N'6', N'6', 2, 1057803)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (23, N'6', N'6', N'3', 1065995)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (23, N'6', N'6', 3, 1065995)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (24, N'6', N'6', N'4', 1082379)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (24, N'6', N'6', 4, 1082379)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (25, N'7', N'7', N'1', 2102541)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (25, N'7', N'7', 1, 2102541)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (26, N'7', N'7', N'2', 2106637)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (26, N'7', N'7', 2, 2106637)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (27, N'7', N'7', N'3', 2114829)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (27, N'7', N'7', 3, 2114829)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (28, N'7', N'7', N'4', 2131213)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (28, N'7', N'7', 4, 2131213)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (29, N'8', N'8', N'1', 4199953)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (29, N'8', N'8', 1, 4199953)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (30, N'8', N'8', N'2', 4204049)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (30, N'8', N'8', 2, 4204049)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (31, N'8', N'8', N'3', 4212241)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (31, N'8', N'8', 3, 4212241)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (32, N'8', N'8', N'4', 4228625)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (32, N'8', N'8', 4, 4228625)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (33, N'9', N'9', N'1', 8394515)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (33, N'9', N'9', 1, 8394515)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (34, N'9', N'9', N'2', 8398611)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (34, N'9', N'9', 2, 8398611)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (35, N'9', N'9', N'3', 8406803)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (35, N'9', N'9', 3, 8406803)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (36, N'9', N'9', N'4', 8423187)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (36, N'9', N'9', 4, 8423187)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (37, N'10', N'10', N'1', 16783383)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (37, N'10', N'10', 1, 16783383)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (38, N'10', N'10', N'2', 16787479)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (38, N'10', N'10', 2, 16787479)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (39, N'10', N'10', N'3', 16795671)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (39, N'10', N'10', 3, 16795671)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (40, N'10', N'10', N'4', 16812055)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (40, N'10', N'10', 4, 16812055)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (41, N'Jack', N'J', N'1', 33560861)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (41, N'Jack', N'J', 1, 33560861)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (42, N'Jack', N'J', N'2', 33564957)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (42, N'Jack', N'J', 2, 33564957)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (43, N'Jack', N'J', N'3', 33573149)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (43, N'Jack', N'J', 3, 33573149)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (44, N'Jack', N'J', N'4', 33589533)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (44, N'Jack', N'J', 4, 33589533)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (45, N'Queen', N'Q', N'1', 67115551)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (45, N'Queen', N'Q', 1, 67115551)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (46, N'Queen', N'Q', N'2', 67119647)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (46, N'Queen', N'Q', 2, 67119647)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (47, N'Queen', N'Q', N'3', 67127839)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (47, N'Queen', N'Q', 3, 67127839)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (48, N'Queen', N'Q', N'4', 67144223)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (48, N'Queen', N'Q', 4, 67144223)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (49, N'King', N'K', N'1', 134224677)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (49, N'King', N'K', 1, 134224677)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (50, N'King', N'K', N'2', 134228773)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (50, N'King', N'K', 2, 134228773)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (51, N'King', N'K', N'3', 134236965)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (51, N'King', N'K', 3, 134236965)
 GO
-INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (52, N'King', N'K', N'4', 134253349)
+INSERT [dbo].[Deck] ([ID], [Face], [Abbrv], [Suit], [Value]) VALUES (52, N'King', N'K', 4, 134253349)
 GO
+
+
+
+
 SET IDENTITY_INSERT [dbo].[Deck] OFF
 GO
 SET IDENTITY_INSERT [dbo].[Game] ON 
 GO
-INSERT [dbo].[Game] ([ID], [GameID], [CreateDate], [CreateIP]) VALUES (1, N'00932162-9a80-4c37-841b-6dd18e46c9c6', CAST(N'2022-02-06T09:47:11.3113305' AS DateTime2), N'::1')
+INSERT [dbo].[Game] ([ID], [GameID], [DealerID], [CreateDate], [CreateIP]) VALUES (1, N'00932162-9a80-4c37-841b-6dd18e46c9c6', 8, CAST(N'2022-02-06T09:47:11.3113305' AS DateTime2), N'::1')
 GO
-INSERT [dbo].[Game] ([ID], [GameID], [CreateDate], [CreateIP]) VALUES (2, N'ad908d16-2138-48a2-944d-4f11baa714af', CAST(N'2022-02-06T09:47:18.0424598' AS DateTime2), N'::1')
+INSERT [dbo].[Game] ([ID], [GameID], [DealerID], [CreateDate], [CreateIP]) VALUES (2, N'ad908d16-2138-48a2-944d-4f11baa714af', 8, CAST(N'2022-02-06T09:47:18.0424598' AS DateTime2), N'::1')
 GO
-INSERT [dbo].[Game] ([ID], [GameID], [CreateDate], [CreateIP]) VALUES (3, N'97dca9ce-c974-4d05-9be2-fb2929bcfd45', CAST(N'2022-02-06T09:47:24.1623672' AS DateTime2), N'::1')
+INSERT [dbo].[Game] ([ID], [GameID], [DealerID], [CreateDate], [CreateIP]) VALUES (3, N'97dca9ce-c974-4d05-9be2-fb2929bcfd45', 8, CAST(N'2022-02-06T09:47:24.1623672' AS DateTime2), N'::1')
 GO
-INSERT [dbo].[Game] ([ID], [GameID], [CreateDate], [CreateIP]) VALUES (4, N'5a4512f7-77a2-4954-a77a-8b0a63be6ac8', CAST(N'2022-02-06T09:47:32.1592421' AS DateTime2), N'::1')
+INSERT [dbo].[Game] ([ID], [GameID], [DealerID], [CreateDate], [CreateIP]) VALUES (4, N'5a4512f7-77a2-4954-a77a-8b0a63be6ac8', 8, CAST(N'2022-02-06T09:47:32.1592421' AS DateTime2), N'::1')
 GO
 SET IDENTITY_INSERT [dbo].[Game] OFF
 GO
+
+
+
+
+
 SET IDENTITY_INSERT [dbo].[GameCards] ON 
 GO
 INSERT [dbo].[GameCards] ([ID], [GameID], [CardID]) VALUES (1, N'00932162-9a80-4c37-841b-6dd18e46c9c6', 52)
@@ -686,58 +705,21 @@ SET IDENTITY_INSERT [dbo].[Suits] OFF
 GO
 ALTER TABLE [dbo].[Game] ADD  CONSTRAINT [DF_Game_GameID]  DEFAULT (newid()) FOR [GameID]
 GO
+ALTER TABLE [dbo].[Game] ADD  CONSTRAINT [DF_Game_DealerID]  DEFAULT (8) FOR [DealerID]
+GO
 ALTER TABLE [dbo].[Game] ADD  CONSTRAINT [DF_Game_CreateDate]  DEFAULT (sysdatetime()) FOR [CreateDate]
 GO
-/****** Object:  StoredProcedure [dbo].[Game_InsertNewGame]    Script Date: 2/6/2022 9:51:10 AM ******/
+/****** Object:  StoredProcedure [dbo].[Game_InsertNewGame]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
+
 CREATE Procedure [dbo].[Game_InsertNewGame]
 
 	@Array varchar(8000)
-	, @GameID uniqueidentifier Output
-
-As
-
-Set NoCount On
-
-Begin Tran
-
-	Select @GameID = NEWID()
-	
-	Insert Into dbo.Game ( GameID )
-	Values ( @GameID )
-
-	Insert Into dbo.GameCards
-	Select @GameID, a.Item
-	From dbo.DelimitedSplit8K(@Array, '|') a
-	Order By a.ItemNumber
-	
-Commit Tran
-
-GO
-/****** Object:  StoredProcedure [dbo].[Game_InsertNewGame2]    Script Date: 2/6/2022 9:51:10 AM ******/
--- Updated for transaction safety (XACT_ABORT ON).
--- Thanks to Davide Mauri (@yorek, Azure SQL Product Manager) for highlighting
--- the modern STRING_SPLIT(@s, '|', 1) approach available in SQL Server 2022+.
--- Current implementation retains dbo.DelimitedSplit8K for SQL Server 2019 compatibility.
-/*
-    Example for SQL Server 2022+:
-
-    INSERT INTO dbo.GameCards (GameID, Item)
-    SELECT @GameID, s.[value]
-    FROM STRING_SPLIT(@Array, '|', 1) AS s  -- replaces dbo.DelimitedSplit8K
-    ORDER BY s.[ordinal];
-*/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
-CREATE Procedure [dbo].[Game_InsertNewGame2]
-
-	@Array varchar(8000)
+	, @DealerID int
 	, @CreateIP varchar(100)
 	, @GameID uniqueidentifier Output
 
@@ -750,8 +732,8 @@ Begin Tran
 
 	Select @GameID = NEWID()
 	
-	Insert Into dbo.Game ( GameID, [CreateIP] )
-	Values ( @GameID, @CreateIP )
+	Insert Into dbo.Game ( GameID, [DealerID], [CreateIP] )
+	Values ( @GameID, @DealerID, @CreateIP )
 
 	Insert Into dbo.GameCards
 	Select @GameID, a.Item
@@ -762,28 +744,7 @@ Commit Tran
 
 
 GO
-/****** Object:  StoredProcedure [dbo].[GameDeck_GetNewDeck]    Script Date: 2/6/2022 9:51:10 AM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-Create Procedure [dbo].[GameDeck_GetNewDeck]
-
-As
-
-Set NoCount On
-
-	Select
-		ROW_NUMBER() Over(Order By NewID()) ID
-		, s.ColorHex Color
-		, d.Abbrv Face
-		, s.UTF8 Suit
-	From dbo.Deck d
-		Inner Join dbo.Suits s
-			On s.ID = d.Suit
-
-GO
-/****** Object:  StoredProcedure [dbo].[GameDeck_GetRawDeck]    Script Date: 2/6/2022 9:51:10 AM ******/
+/****** Object:  StoredProcedure [dbo].[GameDeck_GetRawDeck]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -806,11 +767,22 @@ Set NoCount On
 	Order By d.ID
 
 GO
-/****** Object:  StoredProcedure [dbo].[GameDeck_GetShuffledDeck]    Script Date: 2/6/2022 9:51:10 AM ******/
+/****** Object:  StoredProcedure [dbo].[GameDeck_GetShuffledDeck]    Script Date: 10/30/2025 10:05:09 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
+-- ==========================================================================================
+-- LEGACY NOTICE:
+-- This stored procedure is retained for backward compatibility only.
+-- The shuffle logic has been moved to the C# Web Application.
+-- Use [dbo].[GameDeck_GetRawDeck] instead for the current implementation.
+--
+-- Legacy Behavior:
+-- Returns a shuffled deck using ORDER BY NEWID(), joining Deck → Suits.
+-- ==========================================================================================
+
 Create Procedure [dbo].[GameDeck_GetShuffledDeck]
 
 As
@@ -826,4 +798,8 @@ Set NoCount On
 		Inner Join dbo.Suits s
 			On s.ID = d.Suit
 
+GO
+USE [master]
+GO
+ALTER DATABASE [PokerApp] SET  READ_WRITE 
 GO

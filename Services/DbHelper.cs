@@ -76,6 +76,7 @@ namespace poker.net.Services
             var parameters = new DynamicParameters();
             parameters.Add("@Return", dbType: DbType.Int32, direction: ParameterDirection.ReturnValue);
             parameters.Add("@CreateIP", ip, DbType.String, size: 100, direction: ParameterDirection.Input);
+            parameters.Add("@DealerID", game.DealerID, DbType.Int32, direction: ParameterDirection.Input);
             parameters.Add("@Array", game.CardIds, DbType.String, size: 8000, direction: ParameterDirection.Input);
             parameters.Add("@GameID", dbType: DbType.Guid, direction: ParameterDirection.Output);
 
@@ -85,7 +86,7 @@ namespace poker.net.Services
             try
             {
                 await _db.ExecuteAsync(
-                    "dbo.Game_InsertNewGame2",
+                    "dbo.Game_InsertNewGame",
                     parameters,
                     commandType: CommandType.StoredProcedure
                 );

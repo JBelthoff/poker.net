@@ -1,14 +1,10 @@
 ﻿## Sql Server
-Update DB Table [dbo].[Game] to add DealerID - Requiers update to SPROC: [dbo].[Game_InsertNewGame2] 
 
-Correct Join DataType mismatch on this:
-	Select
-		d.ID
-		, s.ColorHex Color
-		, d.Abbrv Face
-		, s.UTF8 Suit
-		, d.Value
-	From dbo.Deck d
-		Inner Join dbo.Suits s
-			On s.ID = d.Suit
-	Order By d.ID
+use [PokerApp]
+go
+
+select gc.[ID], gc.[GameID], g.[DealerID], gc.[CardID]
+from [dbo].[Game] g
+	inner join [dbo].[GameCards] gc
+		on gc.[GameID] = g.[GameID]
+
