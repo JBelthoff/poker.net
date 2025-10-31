@@ -695,9 +695,9 @@ SET IDENTITY_INSERT [dbo].[Suits] ON
 GO
 INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [UTF8]) VALUES (1, N'Spade', N'S', N'Black', N'000000', N'&spades;', N'&#9824;')
 GO
-INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [UTF8]) VALUES (2, N'Heart', N'H', N'Red', N'FF0000', N'&hearts;', N'&#9829;')
+INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [UTF8]) VALUES (2, N'Heart', N'H', N'Red', N'ff0000', N'&hearts;', N'&#9829;')
 GO
-INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [UTF8]) VALUES (3, N'Diamond', N'D', N'Red', N'FF0000', N'&diams;', N'&#9830;')
+INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [UTF8]) VALUES (3, N'Diamond', N'D', N'Red', N'ff0000', N'&diams;', N'&#9830;')
 GO
 INSERT [dbo].[Suits] ([ID], [Name], [Abbrv], [Color], [ColorHex], [HTMLName], [UTF8]) VALUES (4, N'Club', N'C', N'Black', N'000000', N'&clubs;', N'&#9827;')
 GO
