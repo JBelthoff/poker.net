@@ -22,9 +22,9 @@ namespace poker.net.Services
             var bestHands = includeBestHands ? new Card[9][] : Array.Empty<Card[]>();
 
             int b0 = deck[18].Value, b1 = deck[19].Value, b2 = deck[20].Value, b3 = deck[21].Value, b4 = deck[22].Value;
-            var flushes = PokerLib.Flushes;
-            var unique5 = PokerLib.Unique5;
-            var hashes = PokerLib.HashValues;
+            //var flushes = PokerLib.Flushes;
+            //var unique5 = PokerLib.Unique5;
+            //var hashes = PokerLib.HashValues;
             var perm = PokerLib.Perm7Indices;
 
             for (int p = 0; p < 9; p++)
@@ -40,8 +40,7 @@ namespace poker.net.Services
                 for (int row = 0; row < 21; row++)
                 {
                     int i = row * 5;
-                    ushort s = PokerLib.Eval5With(
-                        flushes, unique5, hashes,
+                    ushort s = PokerLib.Eval5CardsFast(
                         seven[perm[i + 0]], seven[perm[i + 1]],
                         seven[perm[i + 2]], seven[perm[i + 3]],
                         seven[perm[i + 4]]);
@@ -85,17 +84,17 @@ namespace poker.net.Services
             var bestIdx5 = includeBestIndices ? new byte[9][] : Array.Empty<byte[]>();
 
             int b0 = deck[18].Value, b1 = deck[19].Value, b2 = deck[20].Value, b3 = deck[21].Value, b4 = deck[22].Value;
-            var flushes = PokerLib.Flushes;
-            var unique5 = PokerLib.Unique5;
-            var hashes = PokerLib.HashValues;
+            //var flushes = PokerLib.Flushes;
+            //var unique5 = PokerLib.Unique5;
+            //var hashes = PokerLib.HashValues;
             var perm = PokerLib.Perm7Indices;
 
             for (int p = 0; p < 9; p++)
             {
-                Span<int> sevenVals = stackalloc int[7];
-                sevenVals[0] = deck[p].Value;
-                sevenVals[1] = deck[p + 9].Value;
-                sevenVals[2] = b0; sevenVals[3] = b1; sevenVals[4] = b2; sevenVals[5] = b3; sevenVals[6] = b4;
+                Span<int> seven = stackalloc int[7];
+                seven[0] = deck[p].Value;
+                seven[1] = deck[p + 9].Value;
+                seven[2] = b0; seven[3] = b1; seven[4] = b2; seven[5] = b3; seven[6] = b4;
 
                 ushort bestScore = ushort.MaxValue;
                 int bestRow = 0;
@@ -103,11 +102,10 @@ namespace poker.net.Services
                 for (int row = 0; row < 21; row++)
                 {
                     int i = row * 5;
-                    ushort s = PokerLib.Eval5With(
-                        flushes, unique5, hashes,
-                        sevenVals[perm[i + 0]], sevenVals[perm[i + 1]],
-                        sevenVals[perm[i + 2]], sevenVals[perm[i + 3]],
-                        sevenVals[perm[i + 4]]);
+                    ushort s = PokerLib.Eval5CardsFast(
+                        seven[perm[i + 0]], seven[perm[i + 1]],
+                        seven[perm[i + 2]], seven[perm[i + 3]],
+                        seven[perm[i + 4]]);
                     if (s < bestScore) { bestScore = s; bestRow = row; }
                 }
 

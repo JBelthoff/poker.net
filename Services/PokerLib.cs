@@ -1,13 +1,21 @@
-﻿namespace poker.net.Services 
+﻿namespace poker.net.Services
 {
-    using poker.net.Models;
     using System;
-    using System.Collections.Generic;
     using System.Runtime.CompilerServices;
 
     /// <summary>
-    /// Summary description for PokerLib
+    /// Core static library for poker hand evaluation.
+    /// Provides optimized lookup tables, bitmask-based hand encoding,
+    /// and high-performance evaluators for 5- and 7-card poker hands.
+    /// 
+    /// This library powers both the EvalEngine (used by the web app)
+    /// and benchmark projects like FinalRiverBench and CPlusPlusBench.
+    /// 
+    /// Designed for zero allocations and maximum throughput,
+    /// leveraging precomputed tables and a fully managed implementation
+    /// of Cactus Kev’s evaluation algorithm, modernized for .NET.
     /// </summary>
+
     public static class PokerLib
     {
 
@@ -45,18 +53,6 @@
 
         #region Methods
 
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public static ushort eval_5cards_fast(int c1, int c2, int c3, int c4, int c5)
-        //{
-        //    uint q = (uint)(c1 | c2 | c3 | c4 | c5) >> 16;
-        //    ushort s;
-        //    if ((c1 & c2 & c3 & c4 & c5 & 0xf000) != 0) return flushes[q]; // check for flushes and straight flushes
-
-        //    s = unique5[q];// check for straights and high card hands
-        //    if ((s != 0)) return s;
-        //    return hash_values[find_fast((uint)((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff)))];
-        //}
-
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static ushort eval_5cards_fast(int c1, int c2, int c3, int c4, int c5)
         {
@@ -81,27 +77,6 @@
             return hash_values[find_fast(key)];
         }
 
-
-        public static ushort eval_5hand_fast_jb(List<Card> l)
-        {
-            return (eval_5cards_fast(l[0].Value, l[1].Value, l[2].Value, l[3].Value, l[4].Value));
-        }
-
-        // New: span over VALUES (fastest when you already have ints)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort Eval5(ReadOnlySpan<int> v) =>
-            eval_5cards_fast(v[0], v[1], v[2], v[3], v[4]);
-
-        // New: five Cards by ref (no List<T> indexer / bounds cost)
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort Eval5(in Card c0, in Card c1, in Card c2, in Card c3, in Card c4) =>
-            eval_5cards_fast(c0.Value, c1.Value, c2.Value, c3.Value, c4.Value);
-
-        // (Optional) Span over Cards when you naturally have them in a contiguous buffer
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort Eval5(ReadOnlySpan<Card> v) =>
-            eval_5cards_fast(v[0].Value, v[1].Value, v[2].Value, v[3].Value, v[4].Value);
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int hand_rank_jb(int value)
         {
@@ -119,52 +94,8 @@
 
         // Added a PascalCase convenience wrapper (optional)
         public static ushort Eval5CardsFast(int c1, int c2, int c3, int c4, int c5) => eval_5cards_fast(c1, c2, c3, c4, c5);
+        
         public static int HandRankJb(int value) => hand_rank_jb(value);
-
-        public static ushort eval_5cards(int c1, int c2, int c3, int c4, int c5)
-        {
-            int q, s;
-
-            q = (c1 | c2 | c3 | c4 | c5) >> 16;
-
-            if ((c1 & c2 & c3 & c4 & c5 & 0xf000) != 0) return (flushes[q]);
-
-            s = unique5[q];
-            if (s != 0) return (ushort)s;
-
-            return (hash_values[findit((c1 & 0xff) * (c2 & 0xff) * (c3 & 0xff) * (c4 & 0xff) * (c5 & 0xff))]);
-        }
-
-        public static ushort eval_5hand(int[] hand)
-        {
-            int c1 = hand[0];
-            int c2 = hand[1];
-            int c3 = hand[2];
-            int c4 = hand[3];
-            int c5 = hand[4];
-            return eval_5cards(c1, c2, c3, c4, c5);
-        }
-
-        public static int findit(int key)
-        {
-            int low = 0, high = 4887, mid;
-
-            while (low <= high)
-            {
-                mid = (high + low) >> 1;
-
-                if (key < products[mid])
-                    high = mid - 1;
-                else if (key > products[mid])
-                    low = mid + 1;
-                else
-                    return (mid);
-            }
-
-            throw new InvalidOperationException("no match found; key = " + key);
-        }
-
-        public static int RANK(int c) { return (c >> 8) & 0xF; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint find_fast(uint u)
@@ -178,47 +109,9 @@
             return a ^ hash_adjust[b];
         }
 
-        [Obsolete("Use PokerLib.Perm7.Indices (flattened byte[]).")]
-        public static readonly int[,] perm7 = new int[,]{
-          { 0, 1, 2, 3, 4 },
-          { 0, 1, 2, 3, 5 },
-          { 0, 1, 2, 3, 6 },
-          { 0, 1, 2, 4, 5 },
-          { 0, 1, 2, 4, 6 },
-          { 0, 1, 2, 5, 6 },
-          { 0, 1, 3, 4, 5 },
-          { 0, 1, 3, 4, 6 },
-          { 0, 1, 3, 5, 6 },
-          { 0, 1, 4, 5, 6 },
-          { 0, 2, 3, 4, 5 },
-          { 0, 2, 3, 4, 6 },
-          { 0, 2, 3, 5, 6 },
-          { 0, 2, 4, 5, 6 },
-          { 0, 3, 4, 5, 6 },
-          { 1, 2, 3, 4, 5 },
-          { 1, 2, 3, 4, 6 },
-          { 1, 2, 3, 5, 6 },
-          { 1, 2, 4, 5, 6 },
-          { 1, 3, 4, 5, 6 },
-          { 2, 3, 4, 5, 6 }
-        };
-
         #endregion
 
         #region Deal Order
-
-        [Obsolete("Use PokerLib.DealOrder9x9 instead.")]
-        public static int[,] DealOrder = new int[,] {
-            { 8, 0, 1, 2, 3, 4, 5, 6, 7 },
-            { 7, 8, 0, 1, 2, 3, 4, 5, 6 },
-            { 6, 7, 8, 0, 1, 2, 3, 4, 5 },
-            { 5, 6, 7, 8, 0, 1, 2, 3, 4 },
-            { 4, 5, 6, 7, 8, 0, 1, 2, 3 },
-            { 3, 4, 5, 6, 7, 8, 0, 1, 2 },
-            { 2, 3, 4, 5, 6, 7, 8, 0, 1 },
-            { 1, 2, 3, 4, 5, 6, 7, 8, 0 },
-            { 0, 1, 2, 3, 4, 5, 6, 7, 8 }
-        };
 
         public static ReadOnlySpan<byte> DealOrder9x9 => _dealOrder; // length = 81
         private static readonly byte[] _dealOrder =
@@ -238,38 +131,6 @@
         #endregion
 
         #region Long Arrays
-
-        // Expose immutable, zero-copy views for hot tables
-        public static ReadOnlySpan<ushort> Flushes => flushes;
-        public static ReadOnlySpan<ushort> Unique5 => unique5;
-        public static ReadOnlySpan<ushort> HashValues => hash_values;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static ushort Eval5With(
-        ReadOnlySpan<ushort> flushes,
-        ReadOnlySpan<ushort> unique5,
-        ReadOnlySpan<ushort> hash_values,
-        int c1, int c2, int c3, int c4, int c5)
-            {
-                uint all = (uint)(c1 | c2 | c3 | c4 | c5);
-                uint q = all >> 16;
-
-                if (((uint)c1 & (uint)c2 & (uint)c3 & (uint)c4 & (uint)c5 & 0xF000u) != 0u)
-                    return flushes[(int)q];
-
-                ushort s = unique5[(int)q];
-                if (s != 0) return s;
-
-                uint p1 = (uint)(c1 & 0xFF);
-                uint p2 = (uint)(c2 & 0xFF);
-                uint p3 = (uint)(c3 & 0xFF);
-                uint p4 = (uint)(c4 & 0xFF);
-                uint p5 = (uint)(c5 & 0xFF);
-
-                uint key = unchecked(p1 * p2 * p3 * p4 * p5);
-                return hash_values[(int)find_fast(key)];
-            }
-
 
         #region Flushes
         private static readonly ushort[] flushes = new ushort[]{
@@ -2309,6 +2170,7 @@
 
         #endregion
 
+        #region 7-Card → 5-Card Permutation Table
         public static ReadOnlySpan<byte> Perm7Indices => Perm7.Indices;
         internal static class Perm7
         {
@@ -2341,7 +2203,6 @@
             // Read-only view; callers can’t mutate.
             internal static ReadOnlySpan<byte> Indices => _indices;
         }
+        #endregion
     }
-
-
 }
