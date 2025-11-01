@@ -223,6 +223,21 @@ The 2022 script reflects modern best practices per Davide Mauri (@yorek), includ
 
 ---
 
+
+
+## 📚 Further Reading
+
+- **[C# vs C Poker Evaluator Benchmark](https://gist.github.com/JBelthoff/4fcd73edd04fd5d239a194e7112810f4)**  
+  Deep dive into optimizing and benchmarking the Poker Evaluator engine across .NET 8 → 10 and native C (MSVC /O2).  
+  *Example output shows native C at 3.76 M evals/sec vs .NET 8 at ~3.08 M evals/sec (~82 % of C speed).*
+
+- **[SQL Insert Benchmark (.NET 9) — Pipe vs JSON vs TVP](https://gist.github.com/JBelthoff/adca6398585e14c6b27378c6ca171d61)**  
+  Microbenchmark of common SQL Server insert strategies (Pipe-delimited, JSON, and TVP).  
+  *Pipe wins for tiny inserts, TVP scales best, JSON wins for maintainability.*
+
+---
+
+
 ## Contact
 
 💼 Interested in performance engineering or .NET optimization work?  
