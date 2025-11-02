@@ -146,5 +146,36 @@
             }
             return dst;
         }
+
+
+        public static Card[] GetShuffledDeckArray(IReadOnlyList<Card> deck, string cardIds)
+        {
+            if (deck is null) throw new ArgumentNullException(nameof(deck));
+            if (string.IsNullOrWhiteSpace(cardIds))
+                throw new ArgumentException("CardIDs cannot be null or empty.", nameof(cardIds));
+
+            var lookup = new Dictionary<int, Card>(deck.Count);
+            for (int i = 0; i < deck.Count; i++) lookup[deck[i].ID] = deck[i];
+
+            var ids = cardIds.Split('|', StringSplitOptions.RemoveEmptyEntries);
+            var shuffled = new Card[ids.Length];
+
+            for (int i = 0; i < ids.Length; i++)
+            {
+                if (!int.TryParse(ids[i], out int id) || !lookup.TryGetValue(id, out var c))
+                    throw new InvalidOperationException($"Invalid Card ID: {ids[i]}");
+
+                shuffled[i] = new Card
+                {
+                    ID = c.ID,
+                    Face = c.Face,
+                    Suit = c.Suit,
+                    Color = c.Color,
+                    Value = c.Value
+                };
+            }
+            return shuffled;
+        }
+
     }
 }

@@ -53,8 +53,10 @@
 
         #region Methods
 
+        public static ushort Eval5CardsFast(int c1, int c2, int c3, int c4, int c5) => eval_5cards_fast(c1, c2, c3, c4, c5);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static ushort eval_5cards_fast(int c1, int c2, int c3, int c4, int c5)
+        private static ushort eval_5cards_fast(int c1, int c2, int c3, int c4, int c5)
         {
             uint all = (uint)(c1 | c2 | c3 | c4 | c5);
             uint q = all >> 16;
@@ -77,8 +79,10 @@
             return hash_values[find_fast(key)];
         }
 
+        public static int HandRank(int value) => hand_rank_jb(value);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int hand_rank_jb(int value)
+        private static int hand_rank_jb(int value)
         {
 
             if (value > 6185) return 9; // high card
@@ -91,11 +95,6 @@
             if (value > 10) return 2; // four-kind
             return 1; // straight-flush
         }
-
-        // Added a PascalCase convenience wrapper (optional)
-        public static ushort Eval5CardsFast(int c1, int c2, int c3, int c4, int c5) => eval_5cards_fast(c1, c2, c3, c4, c5);
-        
-        public static int HandRankJb(int value) => hand_rank_jb(value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static uint find_fast(uint u)

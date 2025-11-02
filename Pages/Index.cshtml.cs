@@ -145,7 +145,7 @@ namespace poker.net.Pages
             else
             {
                 Game.CardIds = GetFixedDeck(SelectedWinIndex);
-                var arr = GetShuffledDeckArray(sourceDeck, Game.CardIds);
+                var arr = DeckHelper.GetShuffledDeckArray(sourceDeck, Game.CardIds);
                 ShuffledDeck = new List<Card>(arr);
             }
 
@@ -166,7 +166,7 @@ namespace poker.net.Pages
             }
 
             var source = await _deckService.RawDeckAsync();
-            var deckArr = GetShuffledDeckArray(source, Game.CardIds);
+            var deckArr = DeckHelper.GetShuffledDeckArray(source, Game.CardIds);
 
             // Maintain UI compatibility
             ShuffledDeck = new List<Card>(deckArr);
@@ -187,7 +187,7 @@ namespace poker.net.Pages
             }
 
             var source = await _deckService.RawDeckAsync();
-            var deckArr = GetShuffledDeckArray(source, Game.CardIds);
+            var deckArr = DeckHelper.GetShuffledDeckArray(source, Game.CardIds);
 
             // Maintain UI compatibility
             ShuffledDeck = new List<Card>(deckArr);
@@ -218,7 +218,7 @@ namespace poker.net.Pages
             // --- 1) Rebuild the shuffled deck as a contiguous array (fast path for evaluation) ---
             // We use the immutable source deck to deep-copy by ID into a Card[] according to Game.CardIds.
             var source = await _deckService.RawDeckAsync();
-            var deckArr = GetShuffledDeckArray(source, Game.CardIds);
+            var deckArr = DeckHelper.GetShuffledDeckArray(source, Game.CardIds);
 
             // Also keep the existing Razor view contract that binds to a List<Card>.
             ShuffledDeck = new List<Card>(deckArr);
@@ -278,35 +278,6 @@ namespace poker.net.Pages
         #endregion
 
         #region Functions
-
-        private static Card[] GetShuffledDeckArray(IReadOnlyList<Card> deck, string cardIds)
-        {
-            if (deck is null) throw new ArgumentNullException(nameof(deck));
-            if (string.IsNullOrWhiteSpace(cardIds))
-                throw new ArgumentException("CardIDs cannot be null or empty.", nameof(cardIds));
-
-            var lookup = new Dictionary<int, Card>(deck.Count);
-            for (int i = 0; i < deck.Count; i++) lookup[deck[i].ID] = deck[i];
-
-            var ids = cardIds.Split('|', StringSplitOptions.RemoveEmptyEntries);
-            var shuffled = new Card[ids.Length];
-
-            for (int i = 0; i < ids.Length; i++)
-            {
-                if (!int.TryParse(ids[i], out int id) || !lookup.TryGetValue(id, out var c))
-                    throw new InvalidOperationException($"Invalid Card ID: {ids[i]}");
-
-                shuffled[i] = new Card
-                {
-                    ID = c.ID,
-                    Face = c.Face,
-                    Suit = c.Suit,
-                    Color = c.Color,
-                    Value = c.Value
-                };
-            }
-            return shuffled;
-        }
 
         public string GetNameOfHand(int iRank)
         {
@@ -499,6 +470,7 @@ namespace poker.net.Pages
                     return ComposeFromTop23(t);
             }
         }
+
 
         private static readonly Dictionary<string, int> RankValue = new()
         {

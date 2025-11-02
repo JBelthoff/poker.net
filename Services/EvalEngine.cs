@@ -22,9 +22,6 @@ namespace poker.net.Services
             var bestHands = includeBestHands ? new Card[9][] : Array.Empty<Card[]>();
 
             int b0 = deck[18].Value, b1 = deck[19].Value, b2 = deck[20].Value, b3 = deck[21].Value, b4 = deck[22].Value;
-            //var flushes = PokerLib.Flushes;
-            //var unique5 = PokerLib.Unique5;
-            //var hashes = PokerLib.HashValues;
             var perm = PokerLib.Perm7Indices;
 
             for (int p = 0; p < 9; p++)
@@ -48,7 +45,7 @@ namespace poker.net.Services
                 }
 
                 scores[p] = bestScore;
-                ranks[p] = PokerLib.hand_rank_jb(bestScore);
+                ranks[p] = PokerLib.HandRank(bestScore);
 
                 if (includeBestHands)
                 {
@@ -84,9 +81,7 @@ namespace poker.net.Services
             var bestIdx5 = includeBestIndices ? new byte[9][] : Array.Empty<byte[]>();
 
             int b0 = deck[18].Value, b1 = deck[19].Value, b2 = deck[20].Value, b3 = deck[21].Value, b4 = deck[22].Value;
-            //var flushes = PokerLib.Flushes;
-            //var unique5 = PokerLib.Unique5;
-            //var hashes = PokerLib.HashValues;
+            
             var perm = PokerLib.Perm7Indices;
 
             for (int p = 0; p < 9; p++)
@@ -110,7 +105,7 @@ namespace poker.net.Services
                 }
 
                 scores[p] = bestScore;
-                ranks[p] = PokerLib.hand_rank_jb(bestScore);
+                ranks[p] = PokerLib.HandRank(bestScore);
                 bestIndexes[p] = bestRow;
 
                 if (includeBestIndices)
