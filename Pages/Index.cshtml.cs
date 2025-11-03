@@ -125,7 +125,22 @@ namespace poker.net.Pages
         public async Task DoDeal()
         {
             var isTestMode = false;
-            const int SelectedWinIndex = 6; // See GetFixedDeck() below for test values
+            const int SelectedWinIndex = 5;
+            //###########################################################
+            // 0 = Royal Flush (Spades)
+            // 1 = Straight Flush
+            // 2 = Four of a Kind
+            // 3 = Full House
+            // 4 = Flush (Clubs)
+            // 5 = Straight
+            // 6 = Straight Ace-Low (A–2–3–4–5)
+            // 7 = Three of a Kind
+            // 8 = Two Pair
+            // 9 = Pair (pocket Jacks)
+            // 10 = High Card
+            // 11 = Three-Player Tie
+            // Default fallback (Straight win)
+            //############################################################
             var sourceDeck = await _deckService.RawDeckAsync();
 
             if (!isTestMode)
