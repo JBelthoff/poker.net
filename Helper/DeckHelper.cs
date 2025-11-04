@@ -13,32 +13,6 @@
     public static class DeckHelper
     {
         /// <summary>
-        /// Randomly shuffles a list of cards in-place using a cryptographically secure random generator.
-        /// This version is suitable for cases where deterministic reproducibility is not required.
-        /// </summary>
-        /// <param name="cards">The list of <see cref="Card"/> objects to shuffle.</param>
-        public static void Shuffle(List<Card> cards)
-        {
-            if (cards is null || cards.Count < 2)
-                return;
-
-            using var rng = RandomNumberGenerator.Create();
-            int n = cards.Count;
-
-            while (n > 1)
-            {
-                Span<byte> box = stackalloc byte[1];
-                do rng.GetBytes(box);
-                while (box[0] >= n * (byte.MaxValue / n));
-
-                int k = box[0] % n;
-                n--;
-
-                (cards[k], cards[n]) = (cards[n], cards[k]); // tuple swap
-            }
-        }
-
-        /// <summary>
         /// Randomly shuffles a <see cref="Card"/> array in-place using the Fisher–Yates algorithm.
         /// Uses <see cref="Random.Shared"/> for fast, thread-safe pseudo-random shuffling.
         /// </summary>
@@ -53,25 +27,6 @@
                 if (j != i)
                     (span[i], span[j]) = (span[j], span[i]);
             }
-        }
-
-        /// <summary>
-        /// Converts a list of <see cref="Card"/> objects into a compact '|' (pipe)-delimited string
-        /// representing the card IDs in order. Commonly used to persist or reconstruct deck order.
-        /// </summary>
-        /// <param name="cards">The list of cards to serialize.</param>
-        /// <returns>A pipe-separated string of card IDs, or an empty string if <paramref name="cards"/> is null or empty.</returns>
-        public static string AssembleDeckIdsIntoString(List<Card> cards)
-        {
-            if (cards is null || cards.Count == 0)
-                return string.Empty;
-
-            var sb = new StringBuilder(cards.Count * 3);
-            sb.Append(cards[0].ID);
-            for (int i = 1; i < cards.Count; i++)
-                sb.Append('|').Append(cards[i].ID);
-
-            return sb.ToString();
         }
 
         /// <summary>
@@ -91,32 +46,6 @@
             for (int i = 1; i < cards.Length; i++)
                 sb.Append('|').Append(cards[i].ID);
             return sb.ToString();
-        }
-
-        /// <summary>
-        /// Creates a deep copy of a list of <see cref="Card"/> objects, cloning each card individually.
-        /// Returns a new <see cref="List{Card}"/> instance with independent copies of all elements.
-        /// </summary>
-        /// <param name="cards">The source list of cards to copy.</param>
-        /// <returns>A new list containing cloned <see cref="Card"/> instances, or an empty list if <paramref name="cards"/> is null.</returns>
-        public static List<Card> GetDeepCopyOfDeck(List<Card> cards)
-        {
-            if (cards is null)
-                return [];
-
-            var copy = new List<Card>(cards.Count);
-            foreach (var c in cards)
-            {
-                copy.Add(new Card
-                {
-                    ID = c.ID,
-                    Color = c.Color,
-                    Face = c.Face,
-                    Suit = c.Suit,
-                    Value = c.Value
-                });
-            }
-            return copy;
         }
 
         /// <summary>

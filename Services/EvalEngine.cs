@@ -11,6 +11,7 @@ namespace poker.net.Services
         /// Returns UI-ready results: player scores, rank order, and (optionally) each player’s best 5 cards as Card[][].
         /// This is the overload used by the web application.
         /// </summary>
+#pragma warning disable CA2014
         public static (ushort[] scores, int[] ranks, Card[][] bestHands)
             EvaluateRiverNinePlayersArrays(Card[] deck, bool includeBestHands = false)
         {
@@ -64,11 +65,14 @@ namespace poker.net.Services
 
             return (scores, ranks, bestHands);
         }
+#pragma warning restore CA2014
 
         /// <summary>
         /// Evaluates a 9-player river and returns only index data for each player’s best 5-card hand.
         /// Designed for maximum throughput and minimal allocations—cards can be materialized later at the UI layer.
         /// </summary>
+
+#pragma warning disable CA2014
         public static (ushort[] scores, int[] ranks, int[] bestIndexes, byte[][] bestIdx5)
             EvaluateRiverNinePlayersIdx(Card[] deck, bool includeBestIndices = false)
         {
@@ -123,7 +127,7 @@ namespace poker.net.Services
 
             return (scores, ranks, bestIndexes, bestIdx5);
         }
-
+#pragma warning restore CA2014
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Card PickFromSeven(IReadOnlyList<Card> d, int p, int sevenIdx) => sevenIdx switch

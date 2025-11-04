@@ -56,6 +56,8 @@ namespace poker.net.Pages
             _deckService = deckService;
             _useSql = config.GetValue<bool>("UseSqlServer");
             _db = db;
+            h = new int[9];
+            r = new int[9];
         }
 
         #endregion
