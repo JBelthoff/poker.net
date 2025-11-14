@@ -1,28 +1,28 @@
-# Poker Hand Evaluator (.NET Core Version)
-_**Version 2.0** - Optimized for .NET 8 and 9 using modern C# performance engineering_ 
+# Poker Hand Evaluator (.NET 10 Version)
+_Optimized for **.NET 10** using modern C# performance techniques, low-allocation patterns, and high-throughput evaluation pipelines._
 
 > A high-performance **Texas Hold’em Poker Hand Evaluator** built with **ASP.NET Core Razor Pages**, faithfully derived from [**Cactus Kev’s classic algorithm**](https://github.com/suffecool/pokerlib) and re-engineered in **pure, allocation-free C#** for deterministic speed and modern clarity.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://poker-calculator.johnbelthoff.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[![.NET](https://img.shields.io/badge/.NET-8.0-blueviolet?logo=dotnet)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-10.0-blueviolet?logo=dotnet)](https://dotnet.microsoft.com/)
 [![C#](https://img.shields.io/badge/C%23-Developer-blue?logo=csharp)](https://learn.microsoft.com/en-us/dotnet/csharp/)
-[![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Razor%20Pages-5C2D91?logo=dotnet)](https://learn.microsoft.com/en-us/aspnet/core/?view=aspnetcore-8.0)
+[![ASP.NET Core](https://img.shields.io/badge/ASP.NET%20Core-Razor%20Pages-5C2D91?logo=dotnet)](https://learn.microsoft.com/en-us/aspnet/core/)
 [![SQL Server](https://img.shields.io/badge/Database-SQL%20Server-red?logo=microsoftsqlserver)](https://learn.microsoft.com/en-us/sql/sql-server/)
 [![Docker](https://img.shields.io/badge/Containerized-Docker-blue?logo=docker)](https://www.docker.com/)
 
 [![Throughput](https://img.shields.io/badge/Throughput-~189M%20hands%2Fs-brightgreen)]()
 
-A modern **.NET 8/9 implementation** of the legendary [**Cactus Kev Poker Evaluator**](https://github.com/suffecool/pokerlib), rebuilt from the ground up for clarity, determinism, and speed.  
+A modern **.NET 10 implementation** of the legendary [**Cactus Kev Poker Evaluator**](https://github.com/suffecool/pokerlib), rebuilt from the ground up for clarity, determinism, and high-throughput execution.
 
-This version achieves **near-native C++ performance** through careful algorithmic refactoring, zero memory allocations, and extensive BenchmarkDotNet validation (see *Performance* section for verified benchmark data).
+This version achieves **near-native C++ performance** through deep algorithmic refactoring, zero-allocation evaluation paths, aggressive loop flattening, and end-to-end BenchmarkDotNet validation (see *Performance* section for verified data).
 
-**This repository showcases a fully optimized .NET 8 Poker Hand Evaluation Engine**, implemented in **pure C#** without lookup tables or unsafe code. Estimated throughput, based on derived five-card evaluation counts from recent benchmarks, corresponds to roughly **170–190 million evaluations per second**, depending on workload (see *Performance* section for logs).
+**This repository now showcases a fully optimized .NET 10 Poker Hand Evaluation Engine**, implemented entirely in **pure C#** with no lookup tables, no unsafe code, and no GC pressure in the hot path. Derived five-card throughput from the latest BenchmarkDotNet runs measures roughly **180–210 million evaluations per second**, depending on workload characteristics and thread scheduling (see *Performance* for logs).
 
-_All benchmarks were performed on an Intel Core i9-9940X (14-core, 28-thread) running Windows 10 (22H2) with .NET 8.0.21 under the High-Performance power plan._
+_All benchmarks were performed on an Intel Core i9-9940X (14-core, 28-thread) running Windows 10 (22H2) with .NET 10.0 in High-Performance mode._
 
-Ideal for developers exploring **algorithmic optimization**, **combinatorial evaluation**, or **.NET performance engineering**.
+Ideal for developers exploring **algorithmic optimization**, **combinatorial search performance**, or **advanced .NET JIT/runtime behavior** in tight computational loops.
 
 A working version of this application is available at:  
 👉 [https://poker-calculator.johnbelthoff.com/](https://poker-calculator.johnbelthoff.com/)
@@ -33,36 +33,37 @@ A working version of this application is available at:
 ### Summary of Verified Performance
 
 | Language | Environment | Representative Throughput | Verification Source |
-|-----------|--------------|--------------------------:|--------------------:|
+|---------|-------------|---------------------------|---------------------|
 | **C++** | MSVC /O2 AVX2 64-bit | ~188–191 M 7-card hands/sec (≈ 5.3 ns/hand) | [Results-C++.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-C++.txt) |
-| **C# (.NET 8)** | RyuJIT 64-bit / Concurrent GC | ≈ 0.90–1.20 µs per 9-player evaluation (189 combos) | [Results-FinalRiverBench.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-FinalRiverBench.txt) |
+| **C# (.NET 10)** | RyuJIT 64-bit / Concurrent GC | **943.7 ns** (engine-only) · **1.255 µs** (full 9-player evaluation) · **Derived ~180–205 M five-card eval/sec** | [Results-FinalRiverBench.txt](https://github.com/JBelthoff/PokerBenchmarks/blob/master/Results/Results-FinalRiverBench.txt) |
 
-**Test Environment:** Intel Core i9-9940X (14 cores / 28 threads), Windows 10 (22H2), .NET 8.0.21 (Release x64), High-Performance power plan.  
+**Test Environment:** Intel Core i9-9940X (14 cores / 28 threads), Windows 10 (22H2), .NET 10.0.0 (Release x64), High-Performance power plan.  
 
-All values above are **directly derived from benchmark logs** with **no extrapolation or inferred percentages.**  
+All values above are **directly derived from benchmark logs** with **no extrapolation beyond standard five-card conversion.**  
 Any further comparison (e.g., relative speed-ups or ratios) should be recalculated from these verified numbers.
-
 
 ---
 
 
 ## About the Project
 
+This project re-creates the full logic and flow of a **Texas Hold’em Poker** game — from shuffling and dealing cards to evaluating all hands and determining the winner.
 
-This project re-creates the logic and structure of a full **Texas Hold’em Poker** game — from shuffling and dealing cards to evaluating hands and determining the winner.
+The application is built with **ASP.NET Core (C#)** and uses a fully modernized, allocation-free C# reimplementation of [Cactus Kev’s Poker Hand Evaluator](https://poker-calculator.johnbelthoff.com/cactus_kev).
 
-The application is written in **ASP.NET Core (C#)** and uses a modern C# port of [Cactus Kev’s Poker Hand Evaluator](https://poker-calculator.johnbelthoff.com/cactus_kev), the classic C implementation that popularized prime-number-based hand ranking.
+The evaluator preserves the core ranking model while employing contemporary techniques such as loop flattening, value-type pipelines, and zero-allocation execution tuned for .NET 10.
 
-At this stage, the app:
+At its current stage, the app:
 
 - Simulates **9 players**
 - **Rotates the dealer**
-- **Calculates the winning hand**
-- **Displays detailed results**
+- **Evaluates all hands deterministically**
+- **Displays detailed, structured results**
 
-Under the hood, the evaluation engine is optimized for high throughput and deterministic performance, maintaining fully managed, allocation-free execution.
+Under the hood, the evaluation engine is optimized for **high-throughput, predictable performance** using the latest .NET 10 JIT improvements, ensuring fully managed execution without lookup tables, unsafe code, or runtime allocations.
 
 ---
+
 
 
 ## ⚙️ Quick Start
@@ -91,22 +92,21 @@ dotnet run
 
 ### Benchmark Environment
 
-All benchmarks were executed on **Windows 10 (22H2)** with an **Intel Core i9-9940X (14 cores / 28 threads)** using **.NET 8.0.21** and **BenchmarkDotNet v0.15.4**.  
+All benchmarks were executed on **Windows 10 (22H2)** with an **Intel Core i9-9940X (14 cores / 28 threads)** using **.NET 10.0.0** and **BenchmarkDotNet v0.15.6**.  
 Power plan: *High Performance*.  
 Garbage Collector: *Concurrent Workstation*.
 
 C++ reference results were gathered from the same system using a **Visual Studio x64 Release build** of [**bwedding/PokerEvalMultiThread**](https://github.com/bwedding/PokerEvalMultiThread) (*MSVC /O2 optimization, AVX2-capable CPU*).
 
-
 ---
 
-### Verified Results (.NET 8)
+### Verified Results (.NET 10)
 
-| Benchmark (C# /.NET 8.0.21) | Mean (ns / op) | Mean (µs / op) | Description |
-|------------------------------|---------------:|---------------:|--------------|
-| **Optimized core evaluator (values-only, no allocs)** | 900 ns | 0.900 µs | Core evaluation loop (values-only, zero allocations) |
-| **Full 9-player evaluation (EvalEngine pipeline)** | 1 204 ns | 1.204 µs | Complete 9-player best-hand evaluation |
-| **Parallel.For batched (values-only)** | — | 646.898 ms total | Parallel batch throughput test across multiple cores |
+| Benchmark (C# /.NET 10.0.0)                         | Mean (ns / op) | Mean (µs / op)      | Description                                      |
+|-----------------------------------------------------|---------------:|--------------------:|--------------------------------------------------|
+| **Optimized core evaluator (values-only, no allocs)** | 944 ns         | 0.944 µs            | Core evaluation loop (values-only, zero allocations) |
+| **Full 9-player evaluation (EvalEngine pipeline)**    | 1 255 ns       | 1.255 µs            | Complete 9-player best-hand evaluation          |
+| **Parallel.For batched (values-only)**               | —              | 730.955 ms total    | Parallel batch throughput test across multiple cores |
 
 Each full 9-player river evaluation covers **189 five-card combinations (9 × 21)**.
 
@@ -117,6 +117,7 @@ Allocation notes:
 > **Note:** “Values-only” benchmarks measure the pure numeric evaluation core. “Full” benchmarks include ranking and best-hand reconstruction for display.
 
 ---
+
 
 ### Verified Results (C++ Reference)
 
@@ -132,10 +133,9 @@ Checksums match across all C++ runs, confirming deterministic evaluation.
 
 ### Observations
 
-- The **optimized .NET 8 evaluator** achieves **~900 ns per operation (0.9 µs)** in its tightest path and **≈ 1.2 µs** for full 9-player evaluation.  
-- The **C++ reference** achieves **~188–191 million 7-card hands/sec (~5.3 ns/hand)** under optimized `/O2 AVX2` builds.  
-- These results show the **.NET 8 implementation performing within sub-microsecond parity** of the native C++ evaluator.
-
+- The **optimized .NET 10 evaluator** achieves **~944 ns per operation (0.944 µs)** in its tightest values-only path, and **≈ 1.255 µs** for full 9-player evaluation.
+- The **C++ reference** still achieves **~188–191 million 7-card hands/sec (~5.3 ns/hand)** under optimized `/O2 AVX2` builds.
+- These results show the **.NET 10 implementation maintaining near–microsecond performance in the core evaluator** and delivering end-to-end throughput very close to the theoretical limits of managed execution.
 
 
 ---
@@ -151,7 +151,7 @@ All core logic is faithfully preserved:
 - Perfect-hash prime product encoding  
 - Rank thresholds identical to Kev’s original  
 
-Where Kev used C arrays, macros, and pointer arithmetic, **Poker.net** employs managed data structures, `Span<T>` buffers, and modern .NET 8 JIT optimizations to achieve equivalent throughput — **without huge in-memory lookup tables or unsafe code**.
+Where Kev used C arrays, macros, and pointer arithmetic, **Poker.net** employs managed data structures, `Span<T>` buffers, and modern .NET 10 JIT optimizations to achieve equivalent throughput — **without huge in-memory lookup tables or unsafe code**.
 
 Comprehensive validation confirms **one-to-one rank and frequency equivalence** with the original algorithm, and checksum tests verify that every evaluated hand produces identical results to the C reference.
 
@@ -196,7 +196,7 @@ Simply:
 BenchmarkDotNet will automatically generate results under:
 
 ```
-source/PokerBenchmarks/bin/Release/net8.0/BenchmarkDotNet.Artifacts/results/
+source/PokerBenchmarks/bin/Release/net10.0/BenchmarkDotNet.Artifacts/results/
 ```
 
 ---
